@@ -15,7 +15,7 @@ endif()
 
 find_PACKAGE(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED
-	HINTS ${GLFW3_DIR})
+	HINTS ${OpenCV_DIR})
 find_package(GLEW REQUIRED
 	HINTS ${GLEW_DIR})
 find_package(GLFW3 REQUIRED
