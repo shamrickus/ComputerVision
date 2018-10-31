@@ -1,7 +1,10 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
-#include <iostream>
 //Includes opengl
+#ifdef _WIN32
+#include "windows.h"
+#endif
+
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include "opencv2/opencv.hpp"
@@ -22,7 +25,7 @@ const char* f_pthr =
 "#version 330\n"
 "out vec4 vColor;"
 "void main(){"
-"	vColor = vec4(0.5, 0.0, 0.5, 1.0);"
+"	vColor = vec4(0.8, 0.0, 0.5, 1.0);"
 "}";
 
 void glfw_error_calllback(int error, const char* description)
@@ -99,6 +102,7 @@ int main()
     return 0;
 }
 /*
+#include "iostream"
 int main(int argc, char** argv)
 {
 	if (argc != 2)

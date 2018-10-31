@@ -54,6 +54,7 @@ private:
 	{
 		switch(pType)
 		{
+		default:
 		case Vertex:
 			return glCreateShader(GL_VERTEX_SHADER);
 		case Fragment:

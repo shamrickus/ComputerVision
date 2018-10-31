@@ -6,7 +6,7 @@
 
 #define LOG_FILE "final.log"
 
-static class Logger 
+class Logger 
 {
 public:
 	static bool Start() { return Restart(); }
