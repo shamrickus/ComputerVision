@@ -11,7 +11,16 @@ IF(WIN32)
 	set(OpenCV_DIR lib/cv)
 	set(GLFW3_DIR lib/glfw)
 	set(GLEW_DIR lib/glew)
+
+else()
+	set(OpenGL_GL_PREFERENCE GLVND)
+	set(GLEW_DIR /usr/share/cmake-3.12/Modules)	
+	find_package(PkgConfig REQUIRED)
+	pkg_search_module(GLFW REQUIRED glfw3)
+	set(GLFW3_DIR ${GLFW_INCLUDE_DIRS})
+	set(GLFW3_LIBS ${GLFW_LIBRARIES})
 endif()
+
 
 find_PACKAGE(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED
@@ -40,18 +49,19 @@ include_directories(${OpenCV_INCLUDE_DIRS}
 	${GLEW_INCLUDE_DIR}
 	${GLFW3_INCLUDE_DIR})
 
-set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/*.h)
-set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/*.cpp)
+set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/*.h ${CMAKE_SOURCE_DIR}/Shaders/*.h ${CMAKE_SOURCE_DIR}/Buffer/*.h)
+set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/Shaders/*.cpp ${CMAKE_SOURCE_DIR}/Buffer/*.cpp)
 
-file(GLOB_RECURSE SRC_HDR ${SRC_HDR_FILES})
-file(GLOB_RECURSE SRC_CPP ${SRC_CPP_FILES})
+file(GLOB SRC_HDR ${SRC_HDR_FILES})
+file(GLOB SRC_CPP ${SRC_CPP_FILES})
 
-add_executable (main final.cpp ${SRC_HDR}
+add_executable (main ${SRC_HDR}
 		${SRC_CPP})
 TARGET_LINK_LIBRARIES(main ${OpenCV_LIBS}
 	${OPENGL_LIBRARY}
 	${GLEW_LIBRARY}
 	${GLFW3_LIBS})
+
 
 IF(WIN32)
 	foreach(dll ${DLLS})
