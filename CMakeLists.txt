@@ -49,11 +49,11 @@ include_directories(${OpenCV_INCLUDE_DIRS}
 	${GLEW_INCLUDE_DIR}
 	${GLFW3_INCLUDE_DIR})
 
-set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/*.h ${CMAKE_SOURCE_DIR}/Shaders/*.h ${CMAKE_SOURCE_DIR}/Buffer/*.h)
-set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/Shaders/*.cpp ${CMAKE_SOURCE_DIR}/Buffer/*.cpp)
+set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/src/*.h)
+set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp )
 
-file(GLOB SRC_HDR ${SRC_HDR_FILES})
-file(GLOB SRC_CPP ${SRC_CPP_FILES})
+file(GLOB_RECURSE SRC_HDR ${SRC_HDR_FILES})
+file(GLOB_RECURSE SRC_CPP ${SRC_CPP_FILES})
 
 add_executable (main ${SRC_HDR}
 		${SRC_CPP})
