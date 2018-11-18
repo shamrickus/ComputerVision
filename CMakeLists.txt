@@ -1,9 +1,10 @@
 ﻿cmake_minimum_required (VERSION 3.1)
 
-project(main C CXX)
+project(final LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(OpenGL_GL_PREFERENCE GLVND)
 option(DEBUG "output debug info")
 
 IF(WIN32)
@@ -13,14 +14,12 @@ IF(WIN32)
 	set(GLEW_DIR lib/glew)
 
 else()
-	set(OpenGL_GL_PREFERENCE GLVND)
 	set(GLEW_DIR /usr/share/cmake-3.12/Modules)	
 	find_package(PkgConfig REQUIRED)
 	pkg_search_module(GLFW REQUIRED glfw3)
 	set(GLFW3_DIR ${GLFW_INCLUDE_DIRS})
 	set(GLFW3_LIBS ${GLFW_LIBRARIES})
 endif()
-
 
 find_PACKAGE(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED
@@ -47,20 +46,33 @@ endif()
 include_directories(${OpenCV_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${GLEW_INCLUDE_DIR}
-	${GLFW3_INCLUDE_DIR})
+	${GLFW3_INCLUDE_DIR}
+	)
 
 set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/src/*.h)
 set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp )
+set(LINK_LIBS ${OpenCV_LIBS}
+	${OPENGL_LIBRARY}
+	${GLEW_LIBRARY}
+	${GLFW3_LIBS})
 
 file(GLOB_RECURSE SRC_HDR ${SRC_HDR_FILES})
 file(GLOB_RECURSE SRC_CPP ${SRC_CPP_FILES})
 
 add_executable (main ${SRC_HDR}
 		${SRC_CPP})
-TARGET_LINK_LIBRARIES(main ${OpenCV_LIBS}
-	${OPENGL_LIBRARY}
-	${GLEW_LIBRARY}
-	${GLFW3_LIBS})
+TARGET_LINK_LIBRARIES(main 
+		${LINK_LIBS})
+
+
+add_subdirectory(lib/Catch2)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/lib/Catch2/contrib/")
+add_executable(tests "${CMAKE_SOURCE_DIR}/tests/PoC.cpp" "${CMAKE_SOURCE_DIR}/src/Logger.h")
+target_link_libraries(tests Catch2::Catch2 ${LINK_LIBS})
+include (CTest)
+include(Catch)
+catch_discover_tests(tests)
+
 
 
 IF(WIN32)

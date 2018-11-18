@@ -9,6 +9,9 @@ compile_commands.json
 CTestTestfile.cmake
 CMakeSettings.json
 main
+tests
 *.log
 
 .vs/*
+
+build/*
