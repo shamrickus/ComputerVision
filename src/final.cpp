@@ -1,6 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-
-//Includes opengl
+﻿//Includes opengl
 #ifdef _WIN32
 #include "windows.h"
 #endif
@@ -31,6 +29,28 @@ const char* f_pthr =
 void glfw_error_calllback(int error, const char* description)
 {
 	fprintf(stderr, "glfw error (%i): %s\n", error, description);
+	Logger::Log(description);
+}
+
+void drawStatistics(GLFWwindow* window)
+{
+	static double lastMeasuredTime = glfwGetTime();
+	static int framesSinceLastUpdate;
+	static size_t frameCount;
+	double currentTime = glfwGetTime();
+	double elapsed = currentTime - lastMeasuredTime;
+	if(elapsed > (double)1/15)
+	{
+		lastMeasuredTime = currentTime;
+		char outputText[256];
+		sprintf(outputText, "FPS: %.0f, FT: %.4fms, F: %llu",
+			((float)framesSinceLastUpdate / elapsed), 
+			elapsed / framesSinceLastUpdate, frameCount);
+		glfwSetWindowTitle(window, outputText);
+		framesSinceLastUpdate = 0;
+	}
+	framesSinceLastUpdate++;
+	frameCount++;
 }
 
 void diagnostics()
@@ -57,11 +77,16 @@ int main()
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
     {
+		Logger::Log("Unable to create window!");
         glfwTerminate();
         return -1;
     }
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glfwMakeContextCurrent(window);
 	glewExperimental = GL_TRUE;
@@ -89,6 +114,7 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+		drawStatistics(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		prog->Activate();
 		vao->Draw();
