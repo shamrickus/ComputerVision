@@ -1,4 +1,5 @@
-
+#ifndef _SHADER_PROGRAM_H_
+#define _SHADER_PROGRAM_H_
 
 #include "Shader.h"
 
@@ -71,3 +72,5 @@ private:
 		return status;
 	}
 };
+
+#endif

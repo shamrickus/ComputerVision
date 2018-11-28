@@ -1,9 +1,38 @@
+#ifndef _SHADER_H_
+#define _SHADER_H_
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include <cstdlib>
 #include <cstdio>
 
+const char* v_pthr =
+"#version 330\n"
+"in vec3 vPoints_M;"
+"void main() {"
+"	gl_Position = vec4(vPoints_M, 1.0);"
+"}";
+
+const char* f_pthr =
+"#version 330\n"
+"out vec4 vColor;"
+"void main(){"
+"	vColor = vec4(1.0, 1.0, 1.0, 1.0);"
+"}";
+
+const char* v_passthru = 
+"#version 330\n" 
+"in vec3 vPoints_M;\n" 
+"uniform mat4 MVP;\n" 
+"void main() { \n" 
+	"gl_Position = MVP * vec4(vPoints_M, 1.0);\n" 
+"}\n" ;
+const char* f_passthru = 
+"#version 330\n" 
+"out vec3 color;\n"
+"void main() { \n"
+	"color = vec4(0.8, 0.0, 0.5, 1.0);\n"
+"}\n" ;
 enum ShaderType
 {
 	Vertex, Fragment
@@ -62,3 +91,5 @@ private:
 		}
 	}
 };
+
+#endif

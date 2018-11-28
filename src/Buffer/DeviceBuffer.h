@@ -1,3 +1,5 @@
+#ifndef _DEVICE_BUFFER_H_
+#define _DEVICE_BUFFER_H_
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -22,3 +24,5 @@ public:
 private:
 	GLuint buffer_;
 };
+
+#endif

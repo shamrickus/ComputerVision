@@ -3,7 +3,6 @@
 project(final LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(OpenGL_GL_PREFERENCE GLVND)
 option(DEBUG "output debug info")
 
@@ -12,6 +11,7 @@ IF(WIN32)
 	set(OpenCV_DIR lib/cv)
 	set(GLFW3_DIR lib/glfw)
 	set(GLEW_DIR lib/glew)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W4")
 
 else()
 	set(GLEW_DIR /usr/share/cmake-3.12/Modules)	
@@ -20,6 +20,11 @@ else()
 	set(GLFW3_DIR ${GLFW_INCLUDE_DIRS})
 	set(GLFW3_LIBS ${GLFW_LIBRARIES})
 endif()
+
+set(GLM_INCLUDE_DIR lib/glm)
+set(REACTPHYSICS3D_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/lib/rp3d/src")
+FILE(GLOB REACTPHYSICS3D_LIBS ${CMAKE_SOURCE_DIR}/lib/rp3d/*.lib)
+
 
 find_PACKAGE(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED
@@ -47,15 +52,19 @@ include_directories(${OpenCV_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${GLEW_INCLUDE_DIR}
 	${GLFW3_INCLUDE_DIR}
+	${GLM_INCLUDE_DIR}
+	${REACTPHYSICS3D_INCLUDE_DIR}
 	)
 
-set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/src/*.h)
-set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp )
 set(LINK_LIBS ${OpenCV_LIBS}
 	${OPENGL_LIBRARY}
 	${GLEW_LIBRARY}
-	${GLFW3_LIBS})
+	${GLFW3_LIBS}
+	${REACTPHYSICS3D_LIBS}
+	)
 
+set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/src/*.h)
+set(SRC_CPP_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE SRC_HDR ${SRC_HDR_FILES})
 file(GLOB_RECURSE SRC_CPP ${SRC_CPP_FILES})
 

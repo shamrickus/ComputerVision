@@ -1,32 +1,27 @@
-﻿//Includes opengl
+﻿#include "reactphysics3d.h"
+
 #ifdef _WIN32
 #include "windows.h"
 #endif
 
+//Includes opengl
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include "opencv2/opencv.hpp"
 #include "Shaders/ShaderProgram.h"
 #include "Buffer/DeviceBuffer.h"
+#include "glm/glm.hpp"
 #include "Buffer/VertexBuffer.h"
 #include "Logger.h"
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "Objects/Cube.h"
+#include "Objects/Camera.h"
+#include "Objects/Grid.h"
+#include "Helper.h"
 using namespace cv;
 
-const char* v_pthr =
-"#version 330\n"
-"in vec3 vPoints_M;"
-"void main() {"
-"	gl_Position = vec4(vPoints_M, 1.0);"
-"}";
-
-const char* f_pthr =
-"#version 330\n"
-"out vec4 vColor;"
-"void main(){"
-"	vColor = vec4(0.8, 0.0, 0.5, 1.0);"
-"}";
-
-void glfw_error_calllback(int error, const char* description)
+void glfwErrorCallback(int error, const char* description)
 {
 	fprintf(stderr, "glfw error (%i): %s\n", error, description);
 	Logger::Log(description);
@@ -70,11 +65,13 @@ int main()
 		return -1;
     GLFWwindow* window;
 
-	glfwSetErrorCallback(glfw_error_calllback);
+	glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit())
         return -1;
 
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	int height = 768;
+	int width = 1280;
+    window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
     if (!window)
     {
 		Logger::Log("Unable to create window!");
@@ -89,41 +86,50 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glfwMakeContextCurrent(window);
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
+	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
 	glewExperimental = GL_TRUE;
 	glewInit();
 
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
 	diagnostics();
+	auto model = glm::mat4(1.f);
+	auto proj = glm::perspective(45.f, (float)width/float(height), 0.1f, 1000.f);
+	rp3d::DynamicsWorld world(rp3d::Vector3(0.f, -9.81, 0.f), rp3d::WorldSettings());
+	world.setNbIterationsPositionSolver(10);
+	world.setNbIterationsVelocitySolver(10);
+	world.enableSleeping(true);
+	world.setIsGratityEnabled(true);
 
-	float points[] = {
-		0.f, 0.5f, 0.f,
-		0.5f, -0.5f, 0.f,
-		-0.5f, -0.5f, 0.f 
-	};
+	auto origin = glm::vec3(0.f, -1.f, 0.f);
+	Grid* grid = new Grid(&origin);
+	Cube* cube = new Cube(&world);
+	auto cam = new Camera();
+	auto mvp = proj * cam->View() * model;
 
-	auto vbo = new DeviceBuffer();
-	auto vao = new VertexBuffer();
-	vbo->BindData(9 * sizeof(float), points);
-	vao->Build();
-
-	auto vs = new Shader(v_pthr, ShaderType::Vertex);
-	auto fs = new Shader(f_pthr, ShaderType::Fragment);
-	auto prog = new ShaderProgram();
-	prog->AttachShader(vs);
-	prog->AttachShader(fs);
-	prog->Link();
+	glErrorCheck(__LINE__, __FILE__);
 
     while (!glfwWindowShouldClose(window))
     {
 		drawStatistics(window);
+		mvp = proj * cam->View() * model;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		prog->Activate();
-		vao->Draw();
+		grid->Draw(mvp);
+		cube->Draw(mvp);
 
         glfwSwapBuffers(window);
 
         glfwPollEvents();
+		cam->Update(window);
+		//world.update(1 / 30.f);
+
+		glErrorCheck(__LINE__, __FILE__);
     }
 
+	glfwDestroyWindow(window);
+	delete grid, cube;
     glfwTerminate();
     return 0;
 }

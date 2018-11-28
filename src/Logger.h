@@ -1,4 +1,7 @@
-#define _CRT_SECURE_NO_WARNINGS
+#ifndef _LOGGER_H_
+#define _LOGGER_H_
+
+#define _CRT_SECURE_NO_WARNINGS 1
 
 #include "GLFW/glfw3.h"
 #include <cstdio>
@@ -37,8 +40,11 @@ public:
 		}
 		va_start(argptr, message);
 		vfprintf(file, message, argptr);
+		vfprintf(stdout, message, argptr);
 		va_end(argptr);
 		fclose(file);
 		return true;
 	}
 };
+
+#endif
