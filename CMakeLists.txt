@@ -8,7 +8,7 @@ option(DEBUG "output debug info")
 
 IF(WIN32)
 	#ONLY 64BIT BINARIES
-	set(OpenCV_DIR lib/cv)
+	set(OpenCV_DIR ${CMAKE_SOURCE_DIR}/lib/cv)
 	set(GLFW3_DIR lib/glfw)
 	set(GLEW_DIR lib/glew)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W4")
@@ -74,13 +74,18 @@ TARGET_LINK_LIBRARIES(main
 		${LINK_LIBS})
 
 
+include(CheckFunctionExists)
 add_subdirectory(lib/Catch2)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/lib/Catch2/contrib/")
-add_executable(tests "${CMAKE_SOURCE_DIR}/tests/PoC.cpp" "${CMAKE_SOURCE_DIR}/src/Logger.h")
-target_link_libraries(tests Catch2::Catch2 ${LINK_LIBS})
-include (CTest)
-include(Catch)
-catch_discover_tests(tests)
+check_function_exists(catch_discover_tests result)
+if(${result})
+	add_executable(tests "${CMAKE_SOURCE_DIR}/tests/PoC.cpp" "${CMAKE_SOURCE_DIR}/src/Logger.h")
+	target_link_libraries(tests Catch2::Catch2 ${LINK_LIBS})
+	include (CTest)
+	include(Catch)
+	catch_discover_tests(tests)
+endif()
+
 
 
 
@@ -93,4 +98,4 @@ endif()
 #Copy our assets to bulid dir
 add_custom_command(TARGET main POST_BUILD 
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:main>/assets)
+		${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:main>assets)
