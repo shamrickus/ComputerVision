@@ -12,6 +12,8 @@ IF(WIN32)
 	set(GLFW3_DIR lib/glfw)
 	set(GLEW_DIR lib/glew)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W4")
+	file(GLOB d "${CMAKE_SOURCE_DIR}/lib/ODE/bin/*.dll")
+	set(DLLS ${DLLS} ${d})
 
 else()
 	set(GLEW_DIR /usr/share/cmake-3.12/Modules)	
@@ -22,9 +24,8 @@ else()
 endif()
 
 set(GLM_INCLUDE_DIR lib/glm)
-set(REACTPHYSICS3D_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/lib/rp3d/src")
-FILE(GLOB REACTPHYSICS3D_LIBS ${CMAKE_SOURCE_DIR}/lib/rp3d/*.lib)
-
+set(ODE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/lib/ODE/include")
+FILE(GLOB ODE_LIBS "${CMAKE_SOURCE_DIR}/lib/ODE/lib/*.lib")
 
 find_PACKAGE(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED
@@ -53,14 +54,14 @@ include_directories(${OpenCV_INCLUDE_DIRS}
 	${GLEW_INCLUDE_DIR}
 	${GLFW3_INCLUDE_DIR}
 	${GLM_INCLUDE_DIR}
-	${REACTPHYSICS3D_INCLUDE_DIR}
+	${ODE_INCLUDE_DIR}
 	)
 
 set(LINK_LIBS ${OpenCV_LIBS}
 	${OPENGL_LIBRARY}
 	${GLEW_LIBRARY}
 	${GLFW3_LIBS}
-	${REACTPHYSICS3D_LIBS}
+	${ODE_LIBS}
 	)
 
 set(SRC_HDR_FILES ${CMAKE_SOURCE_DIR}/src/*.h)

@@ -24,14 +24,16 @@ const char* v_passthru =
 "#version 330\n" 
 "in vec3 vPoints_M;\n" 
 "uniform mat4 MVP;\n" 
+"uniform vec3 nColor;\n"
 "void main() { \n" 
 	"gl_Position = MVP * vec4(vPoints_M, 1.0);\n" 
 "}\n" ;
 const char* f_passthru = 
 "#version 330\n" 
-"out vec3 color;\n"
+"out vec4 color;\n"
+"uniform vec3 nColor;\n"
 "void main() { \n"
-	"color = vec4(0.8, 0.0, 0.5, 1.0);\n"
+	"color = vec4(nColor, 1.0);\n"
 "}\n" ;
 enum ShaderType
 {

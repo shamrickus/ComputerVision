@@ -6,14 +6,13 @@
 #include "Shaders/ShaderProgram.h"
 
 enum Origin {Center, TopLeft};
-class Grid{
+class Grid : public Object {
 public:
-	Grid(glm::vec3* pOrigin) 
+	Grid(glm::vec3 pBase) : Object(pBase)
 	{
-		origin_ = *pOrigin;
 		type_ = Center;
 		step_ = 10;
-		size_ = 100;
+		gridSize_ = 100;
 
 		vao_ = new VertexBuffer(Line);
 		vbo_ = new DeviceBuffer();
@@ -21,44 +20,69 @@ public:
 		vbo_->BindData(PointCount() * 9 * sizeof(float), points_);
 		vao_->Build();
 
+
+		fillB_ = new DeviceBuffer();
+		fill_ = new VertexBuffer(Tri);
+		float* points = new float[6 * 3];
+		auto distance = gridSize_ / 2;
+		switch(type_)
+		{
+		case Center:
+			points[0] = base_.x - distance; points[1] = base_.y; points[2] = base_.z - distance;
+			points[3] = base_.x - distance; points[4] = base_.y; points[5] = base_.z + distance;
+			points[6] = base_.x + distance; points[7] = base_.y; points[8] = base_.z - distance;
+
+			points[9] = base_.x + distance; points[10] = base_.y; points[11] = base_.z + distance;
+			points[12] = base_.x - distance; points[13] = base_.y; points[14] = base_.z + distance;
+			points[15] = base_.x + distance; points[16] = base_.y; points[17] = base_.z - distance;
+			break;
+		}
+		fillB_->BindData(6 * 3 * sizeof(float), points);
+		fill_->Build();
+
 		auto vs = new Shader(v_passthru, Vertex);
-		auto fs = new Shader(f_pthr, Fragment);
+		auto fs = new Shader(f_passthru, Fragment);
 		shader_ = new ShaderProgram();
 		shader_->AttachShader(vs);
 		shader_->AttachShader(fs);
 		shader_->Link();
 
+		size_ = glm::vec3(gridSize_, 1, gridSize_);
+		density_ = 1;
 		assert(vao_->Validate());
+		assert(fill_->Validate());
 	}
+
+
 
 	void Build()
 	{
 		auto count = PointCount() * 3;
-		auto stride = count / (size_ / step_ + 1);
+		auto stride = count / (gridSize_ / step_ + 1);
 		points_ = new float[count];
 		for(int i = 0; i < count; i+=stride)
 		{
-			auto distance = size_ / 2;
+			auto distance = gridSize_ / 2;
 			auto step = step_ * i/stride - distance;
 			switch(type_)
 			{
 			case Center:
-				points_[i]   = origin_.x - distance;
-				points_[i+1] = origin_.y;
-				points_[i+2] = origin_.z + step;
-				points_[i+3] = origin_.x + distance;
-				points_[i+4] = origin_.y;
-				points_[i+5] = origin_.z + step;
+				points_[i]   = base_.x - distance;
+				points_[i+1] = base_.y;
+				points_[i+2] = base_.z + step;
+				points_[i+3] = base_.x + distance;
+				points_[i+4] = base_.y;
+				points_[i+5] = base_.z + step;
 
-				points_[i+6]  = origin_.x + step;
-				points_[i+7]  = origin_.y;
-				points_[i+8]  = origin_.z - distance;
-				points_[i+9]  = origin_.x + step;
-				points_[i+10] = origin_.y;
-				points_[i+11] = origin_.z + distance;
+				points_[i+6]  = base_.x + step;
+				points_[i+7]  = base_.y;
+				points_[i+8]  = base_.z - distance;
+				points_[i+9]  = base_.x + step;
+				points_[i+10] = base_.y;
+				points_[i+11] = base_.z + distance;
 				break;
 			default: 
-				Logger::Log("Unknown Grid Type " + type_);
+				CVLogger::Log("Unknown Grid Type " + type_);
 				break;
 			}
 		}
@@ -69,24 +93,35 @@ public:
 		vbo_->Bind();
 		shader_->Activate();
 		auto mvpHandle = shader_->GetHandle("MVP");
-		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &pMVP[0][0]);
+		auto mvp = pMVP * GetTranslation();
+		auto color = glm::vec3(0.3);
+		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
+		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
 		vao_->Draw(PointCount());
+
+		fillB_->Bind();
+		color = glm::vec3(1);
+		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
+		fill_->Draw(6 * 3);
+
+		glErrorCheck(__LINE__, __FILE__);
 
 	}
 
 protected:
 	int PointCount()
 	{
-		return (size_ / step_ + 1) * 2 * 2;
+		return (gridSize_ / step_ + 1) * 2 * 2;
 	}
-	glm::vec3 origin_;
 	float* points_;
 	Origin type_;
-	int size_;
+	int gridSize_;
 	int step_;
 	DeviceBuffer* vbo_;
 	VertexBuffer* vao_;
 	ShaderProgram* shader_;
+	VertexBuffer* fill_;
+	DeviceBuffer* fillB_;
 
 };
 

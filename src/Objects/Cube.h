@@ -2,14 +2,14 @@
 #define _CUBE_H_
 
 #include "Shaders/ShaderProgram.h"
-#include "reactphysics3d.h"
+#include "ode/ode.h"
+#include "Object.h"
 
-class Cube
+class Cube : public Object
 {
 public:
-	Cube(rp3d::DynamicsWorld* pWorld) 
+	Cube(glm::vec3 pBase) : Object(pBase)
 	{
-		base_ = glm::vec3(0);
 		points_ = new float[12*9]{
 			-1.0f,-1.0f,-1.0f, // triangle 1 : begin
 			-1.0f,-1.0f, 1.0f,
@@ -56,29 +56,40 @@ public:
 
 		shader_ = new ShaderProgram();
 		auto vs = new Shader(v_passthru, ShaderType::Vertex);
-		auto fs = new Shader(f_pthr, ShaderType::Fragment);
+		auto fs = new Shader(f_passthru, ShaderType::Fragment);
 		shader_->AttachShader(vs);
 		shader_->AttachShader(fs);
 
 		shader_->Link();
-
-		boxShape_ = new rp3d::BoxShape(rp3d::Vector3(1.0, 1.0, 1.0));
-		transform_ = rp3d::Transform(rp3d::Vector3(base_.x, base_.y, base_.z), rp3d::Quaternion::identity());
-		rb_ = pWorld->createRigidBody(transform_);
-		rb_->addCollisionShape(boxShape_, transform_, 1);
+		size_ = glm::vec3(2);
+		density_ = 5;
+		color_ = glm::vec3(1);
 	}
 
+	void SetPosition(glm::vec3 pPos)
+	{
+		base_ = pPos;
+	}
 
 	void Draw(glm::mat4 pMVP)
 	{
+
 		vbo_->Bind();
 		shader_->Activate();
 		auto mvpHandle = shader_->GetHandle("MVP");
-		float pMat[16];
-		rb_->getTransform().getOpenGLMatrix(pMat);
-		//pMVP *= pMat;
-		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &pMVP[0][0]);
+		auto mvp = pMVP * GetTranslation();
+		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
+
+		auto colorHandle = shader_->GetHandle("nColor");
+		glUniform3fv(colorHandle, 1,&color_[0]);
 		vao_->Draw(12 * 3);
+
+		auto outline = glm::vec3(0);
+		glUniform3fv(colorHandle, 1,&outline[0]);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		vao_->Draw(12 * 3);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glErrorCheck(__LINE__, __FILE__);
 	}
 
 	~Cube()
@@ -87,18 +98,13 @@ public:
 		delete shader_;
 		delete vao_;
 		delete vbo_;
-		delete boxShape_;
-		delete rb_;
 	}
 private:
 	DeviceBuffer * vbo_;
 	VertexBuffer* vao_;
-	glm::vec3 base_;
 	float *points_;
 	ShaderProgram* shader_;
-	rp3d::RigidBody* rb_;
-	rp3d::BoxShape* boxShape_;
-	rp3d::Transform transform_;
+	glm::vec3 color_;
 };
 
 #endif

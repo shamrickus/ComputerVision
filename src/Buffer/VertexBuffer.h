@@ -6,7 +6,7 @@
 
 enum VertexDrawType
 {
-	Tri, Line
+	Tri, Line, LineLoop
 };
 
 class VertexBuffer
@@ -40,6 +40,11 @@ public:
 		glDrawArrays(GetDrawType(), 0, pCount);
 	}
 
+	void SetType(VertexDrawType pType)
+	{
+		draw_ = pType;
+	}
+
 	unsigned char GetDrawType()
 	{
 		switch(draw_)
@@ -48,6 +53,8 @@ public:
 			return GL_TRIANGLES;
 		case Line:
 			return GL_LINES;
+		case LineLoop:
+			return GL_LINE_LOOP;
 		}
 	}
 

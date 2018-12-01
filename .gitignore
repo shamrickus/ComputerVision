@@ -12,6 +12,7 @@ main
 tests
 *.log
 
+lib/ode_src/*
 .vs/*
 
 build/*

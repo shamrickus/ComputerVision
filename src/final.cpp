@@ -1,6 +1,4 @@
-﻿#include "reactphysics3d.h"
-
-#ifdef _WIN32
+﻿#ifdef _WIN32
 #include "windows.h"
 #endif
 
@@ -12,56 +10,20 @@
 #include "Buffer/DeviceBuffer.h"
 #include "glm/glm.hpp"
 #include "Buffer/VertexBuffer.h"
-#include "Logger.h"
+#include "CVLogger.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "Objects/Cube.h"
 #include "Objects/Camera.h"
 #include "Objects/Grid.h"
 #include "Helper.h"
+#include "ode/ode.h"
+#include "Objects/World.h"
 using namespace cv;
-
-void glfwErrorCallback(int error, const char* description)
-{
-	fprintf(stderr, "glfw error (%i): %s\n", error, description);
-	Logger::Log(description);
-}
-
-void drawStatistics(GLFWwindow* window)
-{
-	static double lastMeasuredTime = glfwGetTime();
-	static int framesSinceLastUpdate;
-	static size_t frameCount;
-	double currentTime = glfwGetTime();
-	double elapsed = currentTime - lastMeasuredTime;
-	if(elapsed > (double)1/15)
-	{
-		lastMeasuredTime = currentTime;
-		char outputText[256];
-		sprintf(outputText, "FPS: %.0f, FT: %.4fms, F: %llu",
-			((float)framesSinceLastUpdate / elapsed), 
-			elapsed / framesSinceLastUpdate, frameCount);
-		glfwSetWindowTitle(window, outputText);
-		framesSinceLastUpdate = 0;
-	}
-	framesSinceLastUpdate++;
-	frameCount++;
-}
-
-void diagnostics()
-{
-	const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
-	const GLubyte* version = glGetString(GL_VERSION); // version as a string
-	char* out = new char[100];
-	sprintf(out, "Renderer: %s\n", renderer);
-	Logger::Log(out);
-	sprintf(out, "OpenGL version supported %s\n", version);
-	Logger::Log(out);
-}
 
 int main()
 {
-	if (!Logger::Start())
+	if (!CVLogger::Start())
 		return -1;
     GLFWwindow* window;
 
@@ -74,11 +36,12 @@ int main()
     window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
     if (!window)
     {
-		Logger::Log("Unable to create window!");
+		CVLogger::Log("Unable to create window!");
         glfwTerminate();
         return -1;
     }
 
+	glEnable(GL_MULTISAMPLE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -92,44 +55,45 @@ int main()
 	glewInit();
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);
 
 	diagnostics();
-	auto model = glm::mat4(1.f);
 	auto proj = glm::perspective(45.f, (float)width/float(height), 0.1f, 1000.f);
-	rp3d::DynamicsWorld world(rp3d::Vector3(0.f, -9.81, 0.f), rp3d::WorldSettings());
-	world.setNbIterationsPositionSolver(10);
-	world.setNbIterationsVelocitySolver(10);
-	world.enableSleeping(true);
-	world.setIsGratityEnabled(true);
 
-	auto origin = glm::vec3(0.f, -1.f, 0.f);
-	Grid* grid = new Grid(&origin);
-	Cube* cube = new Cube(&world);
+	auto world = new World(glm::vec3(0, -2,  0));
 	auto cam = new Camera();
-	auto mvp = proj * cam->View() * model;
+	Grid* grid = new Grid(glm::vec3(0.f, -.25f, 0.f));
+	Cube* cube = new Cube(glm::vec3(0.f, 2.f, 0.f));
+	Cube* cube2 = new Cube(glm::vec3(0.5f, 7.f, 0.f));
+	world->AddBody(grid, false, 3ul, ~1ul, true);
+	world->AddBody(cube, false, 2ul, ~1ul, false);
+	world->AddBody(cube2, false, 2ul, ~1ul, false);
 
 	glErrorCheck(__LINE__, __FILE__);
 
     while (!glfwWindowShouldClose(window))
     {
-		drawStatistics(window);
-		mvp = proj * cam->View() * model;
+		auto timeStep = drawStatistics(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		auto mvp = proj * cam->View();
 		grid->Draw(mvp);
 		cube->Draw(mvp);
+		cube2->Draw(mvp);
 
         glfwSwapBuffers(window);
 
         glfwPollEvents();
 		cam->Update(window);
-		//world.update(1 / 30.f);
 
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			break;
+
+		world->Update(1.f/60);
 		glErrorCheck(__LINE__, __FILE__);
     }
 
 	glfwDestroyWindow(window);
-	delete grid, cube;
     glfwTerminate();
     return 0;
 }
