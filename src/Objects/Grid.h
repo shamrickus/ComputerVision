@@ -1,9 +1,9 @@
 #ifndef _GRID_H_
 #define _GRID_H_
-#include "Buffer/VertexBuffer.h"
-#include "Buffer/DeviceBuffer.h"
-#include "Shaders/Shader.h"
-#include "Shaders/ShaderProgram.h"
+#include "../Buffer/VertexBuffer.h"
+#include "../Buffer/DeviceBuffer.h"
+#include "../Shaders/Shader.h"
+#include "../Shaders/ShaderProgram.h"
 
 enum Origin {Center, TopLeft};
 class Grid : public Object {

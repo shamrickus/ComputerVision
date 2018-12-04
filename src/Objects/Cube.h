@@ -1,7 +1,7 @@
 #ifndef _CUBE_H_
 #define _CUBE_H_
 
-#include "Shaders/ShaderProgram.h"
+#include "../Shaders/ShaderProgram.h"
 #include "ode/ode.h"
 #include "Object.h"
 
