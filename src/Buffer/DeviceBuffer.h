@@ -21,6 +21,11 @@ public:
 		Bind();
 		glBufferData(GL_ARRAY_BUFFER, pSize, pData, GL_STATIC_DRAW);
 	}
+
+	bool Validate()
+	{
+		return glIsBuffer(buffer_);
+	}
 private:
 	GLuint buffer_;
 };

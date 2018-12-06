@@ -12,9 +12,11 @@ enum VertexDrawType
 class VertexBuffer
 {
 public:
-	VertexBuffer() : draw_(Tri)
+	VertexBuffer()
 	{
 		glGenVertexArrays(1, &buffer_);
+		d = 1250;
+		draw_ = Tri;
 	}
 
 	VertexBuffer(VertexDrawType pType) : VertexBuffer() 	{
@@ -26,18 +28,23 @@ public:
 		return glIsVertexArray(buffer_);
 	}
 
-	void Build()
+	virtual void Bind()
 	{
 		glBindVertexArray(buffer_);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	}
 
-	void Draw(int pCount)
+	virtual void Draw(int pCount)
 	{
 		glBindVertexArray(buffer_);
-		auto dt = GetDrawType();
 		glDrawArrays(GetDrawType(), 0, pCount);
+	}
+
+	virtual void BindAttrib(DeviceBuffer* device, int index, int size)
+	{
+		glEnableVertexAttribArray(index);
+		device->Bind();
+		glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, NULL);
+
 	}
 
 	void SetType(VertexDrawType pType)
@@ -58,8 +65,9 @@ public:
 		}
 	}
 
-private:
+protected:
 	GLuint buffer_;
+	int d;
 	VertexDrawType draw_;
 };
 

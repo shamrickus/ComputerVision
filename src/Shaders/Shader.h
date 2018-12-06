@@ -6,27 +6,19 @@
 #include <cstdlib>
 #include <cstdio>
 
-const char* v_pthr =
-"#version 330\n"
-"in vec3 vPoints_M;"
-"void main() {"
-"	gl_Position = vec4(vPoints_M, 1.0);"
-"}";
-
-const char* f_pthr =
-"#version 330\n"
-"out vec4 vColor;"
-"void main(){"
-"	vColor = vec4(1.0, 1.0, 1.0, 1.0);"
-"}";
-
 const char* v_passthru = 
 "#version 330\n" 
 "in vec3 vPoints_M;\n" 
 "uniform mat4 MVP;\n" 
-"uniform vec3 nColor;\n"
 "void main() { \n" 
 	"gl_Position = MVP * vec4(vPoints_M, 1.0);\n" 
+"}\n" ;
+const char* v_2D_xz_passthru = 
+"#version 330\n" 
+"in vec3 vPoints_M;\n" 
+"uniform mat4 MVP;\n" 
+"void main() { \n" 
+	"gl_Position = MVP * vec4(vPoints_M.xz, 0.0, 1.0);\n" 
 "}\n" ;
 const char* f_passthru = 
 "#version 330\n" 
@@ -35,6 +27,26 @@ const char* f_passthru =
 "void main() { \n"
 	"color = vec4(nColor, 1.0);\n"
 "}\n" ;
+
+const char* v_texture = 
+"#version 330\n" 
+"in vec3 vPoints_M;\n" 
+"in vec2 vUV;\n"
+"uniform mat4 MVP;\n" 
+"out vec2 uv;\n"
+"void main() { \n" 
+	"gl_Position = MVP * vec4(vPoints_M.xz, 0.0, 1.0);\n" 
+	"uv = vUV;\n"
+"}\n" ;
+const char* f_texture =
+"#version 330\n"
+"in vec2 uv;\n"
+"uniform sampler2D texture;\n"
+"out vec4 color;\n"
+"void main() {\n"
+	"color = texture2D(texture, uv);\n"
+"}\n";
+
 enum ShaderType
 {
 	Vertex, Fragment

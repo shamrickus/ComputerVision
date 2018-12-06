@@ -14,43 +14,45 @@ public:
 	{
 		base_ = pBase;
 	}
-
-	virtual dBodyID CreateBody(dWorldID pWorld, dSpaceID pSpace)
+	
+	void SetPosition(glm::vec3 pPos)
 	{
-		body_ = dBodyCreate(pWorld);
-		dBodySetPosition(body_, base_.x, base_.y, base_.z);
-		mass_ = dMass();
-		dMassSetBox(&mass_, density_, size_.x, size_.y, size_.z);
-		geom_ = dCreateBox(pSpace, size_.x, size_.y, size_.z);
-		dBodySetMass(body_, &mass_);
-		dGeomSetBody(geom_, body_);
-		return body_;
+		base_ = pPos;
+	}
+
+	virtual void Draw(glm::mat4 pMVP)
+	{
+	}
+
+	virtual void SetSize(glm::vec3 pSize)
+	{
+		size_ = pSize;
 	}
 
 	~Object()
 	{
 	}
-	virtual dGeomID Geom()
+	virtual glm::mat4 GetScreenTransform()
 	{
-		return geom_;
+		return GetTranslation() * GetRotation() * GetScale();
+	}
+	virtual glm::mat4 GetRotation()
+	{
+		return glm::scale(glm::identity<glm::mat4>(), size_);
+	}
+	virtual glm::mat4 GetScale()
+	{
+		return glm::identity<glm::mat4>();
+	}
+	virtual glm::mat4 GetTranslation()
+	{
+		return glm::translate(glm::identity<glm::mat4>(), base_);
 	}
 private:
 protected:
-	glm::mat4 GetTranslation()
-	{
-		auto loc = dGeomGetPosition(geom_);
-		base_.x = loc[0];
-		base_.y = loc[1];
-		base_.z = loc[2];
-		auto rot = dGeomGetRotation(geom_);
-		return glm::make_mat4(ODEtoOGL(loc, rot));
-	}
+
 
 	glm::vec3 base_, size_;
-	dBodyID body_;
-	dMass mass_;
-	dReal density_;
-	dGeomID geom_;
 };
 
 #endif

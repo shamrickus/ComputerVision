@@ -27,12 +27,19 @@ public:
 		else if (glfwGetKey(pWindow, GLFW_KEY_F) == GLFW_PRESS)
 			update += glm::vec3(0, 1, 0);
 
+		if (glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS)
+			update += glm::vec3(1, 0, 1);
+		else if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
+			update += glm::vec3(-1, 0, -1);
+
 		if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(pWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS)
 			update *= 10;
-		loc_ += 0.1f * this->CalcuateLookDirection() * update;
 
 		auto leftMouse = glfwGetMouseButton(pWindow, GLFW_MOUSE_BUTTON_LEFT);
-		if(leftMouse == GLFW_PRESS)
+		auto rightMouse = glfwGetMouseButton(pWindow, GLFW_MOUSE_BUTTON_RIGHT);
+		if (leftMouse == GLFW_PRESS && rightMouse == GLFW_PRESS)
+			update += glm::vec3(1);
+		else if(leftMouse == GLFW_PRESS)
 		{
 			double x, y;
 			glfwGetCursorPos(pWindow, &x, &y);
@@ -59,6 +66,7 @@ public:
 			lastY = 0;
 		}
 
+		loc_ += 0.1f * this->CalcuateLookDirection() * update;
 		dir_ = loc_+ this->CalcuateLookDirection();
 	}
 

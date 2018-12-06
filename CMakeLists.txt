@@ -87,6 +87,8 @@ if(${result})
 	catch_discover_tests(tests)
 endif()
 
+add_executable(calib "${CMAKE_SOURCE_DIR}/calib/Calib.cpp")
+TARGET_LINK_LIBRARIES(calib ${LINK_LIBS})
 
 
 
@@ -99,4 +101,4 @@ endif()
 #Copy our assets to bulid dir
 add_custom_command(TARGET main POST_BUILD 
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:main>assets)
+		${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:main>/assets)

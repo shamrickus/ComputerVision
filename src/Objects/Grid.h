@@ -6,19 +6,19 @@
 #include "Shaders/ShaderProgram.h"
 
 enum Origin {Center, TopLeft};
-class Grid : public Object {
+class Grid : public PhysObject {
 public:
-	Grid(glm::vec3 pBase) : Object(pBase)
+	Grid(glm::vec3 pBase) : PhysObject(pBase)
 	{
 		type_ = Center;
-		step_ = 10;
-		gridSize_ = 100;
+		step_ = 50;
+		gridSize_ = 500;
 
 		vao_ = new VertexBuffer(Line);
 		vbo_ = new DeviceBuffer();
 		Build();
+		vao_->Bind();
 		vbo_->BindData(PointCount() * 9 * sizeof(float), points_);
-		vao_->Build();
 
 
 		fillB_ = new DeviceBuffer();
@@ -37,8 +37,8 @@ public:
 			points[15] = base_.x + distance; points[16] = base_.y; points[17] = base_.z - distance;
 			break;
 		}
+		fill_->Bind();
 		fillB_->BindData(6 * 3 * sizeof(float), points);
-		fill_->Build();
 
 		auto vs = new Shader(v_passthru, Vertex);
 		auto fs = new Shader(f_passthru, Fragment);
@@ -47,7 +47,7 @@ public:
 		shader_->AttachShader(fs);
 		shader_->Link();
 
-		size_ = glm::vec3(gridSize_, 1, gridSize_);
+		size_ = glm::vec3(100, 1, 100);
 		density_ = 1;
 		assert(vao_->Validate());
 		assert(fill_->Validate());
@@ -90,18 +90,20 @@ public:
 
 	void Draw(glm::mat4 pMVP)
 	{
-		vbo_->Bind();
+		vao_->Bind();
 		shader_->Activate();
 		auto mvpHandle = shader_->GetHandle("MVP");
-		auto mvp = pMVP * GetTranslation();
+		auto mvp = pMVP * GetScreenTransform();
 		auto color = glm::vec3(0.3);
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
 		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
+		vao_->BindAttrib(vbo_, 0, 3);
 		vao_->Draw(PointCount());
 
-		fillB_->Bind();
+		fill_->Bind();
 		color = glm::vec3(1);
 		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
+		fill_->BindAttrib(fillB_, 0, 3);
 		fill_->Draw(6 * 3);
 
 		glErrorCheck(__LINE__, __FILE__);

@@ -15,10 +15,10 @@ public:
 		bodies_ = std::vector<dBodyID>();
 		dWorldSetGravity(world_, pGravity.x, pGravity.y, pGravity.z);
 		dWorldSetCFM(world_, 1e-5);
-		dWorldSetLinearDamping(world_, 0.00001);
-		dWorldSetAngularDamping(world_, 0.005);
-		dWorldSetMaxAngularSpeed(world_, 200);
-		dWorldSetContactSurfaceLayer(world_, 0.001);
+		dWorldSetLinearDamping(world_, 0.00005);
+		dWorldSetAngularDamping(world_, 0.015);
+		dWorldSetMaxAngularSpeed(world_, 100);
+		dWorldSetContactSurfaceLayer(world_, 0.005);
 	}
 
 	~World()
@@ -29,7 +29,7 @@ public:
 		dCloseODE();
 	}
 
-	void AddBody(Object* pBody, bool pDisable, unsigned long pCategoryBits, 
+	void AddBody(PhysObject* pBody, bool pDisable, unsigned long pCategoryBits, 
 		unsigned long pCollideBits, bool pStatic)
 	{
 		auto body = pBody->CreateBody(world_, space_);
