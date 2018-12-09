@@ -19,6 +19,9 @@ public:
 	{
 		base_ = pPos;
 	}
+	glm::vec3 GetPosition() {
+		return base_;
+	}
 
 	virtual void Draw(glm::mat4 pMVP)
 	{
@@ -28,21 +31,25 @@ public:
 	{
 		size_ = pSize;
 	}
+	virtual glm::vec3 GetSize()
+	{
+		return size_;
+	}
 
 	~Object()
 	{
 	}
 	virtual glm::mat4 GetScreenTransform()
 	{
-		return GetTranslation() * GetRotation() * GetScale();
+		return GetTranslation() * GetScale() *  GetRotation();
 	}
 	virtual glm::mat4 GetRotation()
 	{
-		return glm::scale(glm::identity<glm::mat4>(), size_);
+		return glm::identity<glm::mat4>();
 	}
 	virtual glm::mat4 GetScale()
 	{
-		return glm::identity<glm::mat4>();
+		return glm::scale(glm::identity<glm::mat4>(), size_);
 	}
 	virtual glm::mat4 GetTranslation()
 	{

@@ -202,11 +202,11 @@ int main(int argc, char *argv[]) {
     }
 	*/
 	int squaresX = 6;
-	int squaresY = 8;
-	float squareLength = 0.0254;
-	float markerLength = 0.0127;
-	auto dictionaryId = cv::aruco::DICT_4X4_50;
-	bool refindStrategy = false;
+	int squaresY = 4;
+	float squareLength = 0.035;
+	float markerLength = 0.0175;
+	auto dictionaryId = cv::aruco::DICT_5X5_100;
+	bool refindStrategy = true;
 	int waitTime = 10;
 	auto detectorParams = cv::aruco::DetectorParameters::create();
     int calibrationFlags = 0;
@@ -214,8 +214,10 @@ int main(int argc, char *argv[]) {
     string outputFile = "detected.txt";
 	bool showChessboardCorners = true;
 	VideoCapture inputVideo;
-	inputVideo.open("assets/pixel/calib.mp4");
+	inputVideo.open("assets/pixel/calibv3.mp4");
 
+	if (!inputVideo.isOpened())
+		abort();
     Ptr<aruco::Dictionary> dictionary =
         aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
 
@@ -266,15 +268,15 @@ int main(int argc, char *argv[]) {
         putText(imageCopy, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
                 Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
 
-        imshow("out", imageCopy);
         if(ids.size() > 0) {
             cout << "Frame captured " << i++ << endl;
+			cout << "Found corners: " << corners.size() << endl;
             allCorners.push_back(corners);
             allIds.push_back(ids);
             allImgs.push_back(image);
             imgSize = image.size();
         }
-		if (i > 15)
+		if (i > 50)
 			break;
     }
 
@@ -311,7 +313,6 @@ int main(int argc, char *argv[]) {
     arucoRepErr = aruco::calibrateCameraAruco(allCornersConcatenated, allIdsConcatenated,
                                               markerCounterPerFrame, board, imgSize, cameraMatrix,
                                               distCoeffs, noArray(), noArray(), calibrationFlags);
-
     // prepare data for charuco calibration
     int nFrames = (int)allCorners.size();
     vector< Mat > allCharucoCorners;
@@ -321,6 +322,7 @@ int main(int argc, char *argv[]) {
     allCharucoIds.reserve(nFrames);
 	cout << "Discovery" << endl;
     for(int i = 0; i < nFrames; i++) {
+		cout << "Frame " << i << endl;
         // interpolate using camera parameters
         Mat currentCharucoCorners, currentCharucoIds;
         aruco::interpolateCornersCharuco(allCorners[i], allIds[i], allImgs[i], charucoboard,
@@ -337,6 +339,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+	cout << "Calibration" << endl;
     // calibrate camera using charuco
     repError =
         aruco::calibrateCameraCharuco(allCharucoCorners, allCharucoIds, charucoboard, imgSize,

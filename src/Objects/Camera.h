@@ -39,7 +39,7 @@ public:
 		auto rightMouse = glfwGetMouseButton(pWindow, GLFW_MOUSE_BUTTON_RIGHT);
 		if (leftMouse == GLFW_PRESS && rightMouse == GLFW_PRESS)
 			update += glm::vec3(1);
-		else if(leftMouse == GLFW_PRESS)
+		if(leftMouse == GLFW_PRESS)
 		{
 			double x, y;
 			glfwGetCursorPos(pWindow, &x, &y);

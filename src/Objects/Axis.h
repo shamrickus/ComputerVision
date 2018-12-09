@@ -1,10 +1,10 @@
 #ifndef _AXIS_H_
 #define _AXIS_H_
-#include "Objects/Object.h"
-#include "Buffer/DeviceBuffer.h"
-#include "Shaders/ShaderProgram.h"
+#include "Object.h"
+#include "../Buffer/DeviceBuffer.h"
+#include "../Shaders/ShaderProgram.h"
 #include <vector>
-#include "Colors.h"
+#include "../Colors.h"
 
 class Axis : public Object
 {
@@ -53,7 +53,6 @@ public:
 		auto colorHandle = program_->GetHandle("nColor");
 
 
-		glLineWidth(3.f);
 		glm::vec3 color;
 		for(int i = 0; i < buffers_.size(); ++i)
 		{
@@ -67,7 +66,6 @@ public:
 			glUniform3fv(colorHandle, 1, &color[0]);
 			vao->Draw(3 * 2);
 		}
-		glLineWidth(1.f);
 	}
 protected:
 	std::vector<std::tuple<VertexBuffer*, DeviceBuffer*, float*> > buffers_;

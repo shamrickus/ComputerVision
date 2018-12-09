@@ -14,16 +14,87 @@ void glErrorCheck(int pLine, const char* pFile)
 		CVLogger::Log(out);
 	}
 }
+std::vector<glm::vec3> ReadInOBJ(const char* pFile)
+	{
+		FILE* fp = fopen(pFile, "r");
+
+		if(fp != nullptr)
+		{
+			std::vector<glm::vec3 > vertices;
+			std::vector<unsigned int> vIndicies;
+			while(true)
+			{
+				char lineHdr[255];
+				int res = fscanf(fp, "%s", lineHdr);
+				if (res == EOF)
+					break;
+
+				if(strcmp(lineHdr, "v") == 0)
+				{
+					float x, y, z;
+					fscanf(fp, "%f %f %f\n", &x, &y, &z);
+					vertices.push_back(glm::vec3(x, y, z));
+				}
+
+				else if (strcmp(lineHdr, "f") == 0)
+				{
+					unsigned int index[3] = {0};
+
+					if(fgets(lineHdr, sizeof(lineHdr), fp) != nullptr)
+					{
+						int matches = sscanf(lineHdr, " %d %d %d\n", index, index+1, index+2);
+						assert(matches == 3);
+					}
+
+					for(int i = 0; i < 3; ++i)
+					{
+						if(index[i])
+						{
+							vIndicies.push_back(index[i]);
+						}
+					}
+				}
+			}
+			std::vector<glm::vec3> v;
+			for (unsigned int vindex : vIndicies)
+			{
+				if(vindex)
+					v.push_back(vertices.at(vindex-1));
+			}
+			return v;
+		}
+	}
+
+glm::mat4 BuildProjection(float pFOV, float pRatio, float n, float f)
+{
+	float ang = 1.0f / tan(pFOV * (3.14159 / 360.f));
+	auto mat = glm::identity<glm::mat4>();
+	mat[0][0] = ang / pRatio;
+	mat[1][1] = ang;
+	mat[2][2] = (f + n) / (n - f);
+	mat[3][2] = (2.f * f * n) / (n - f);
+	mat[2][3] = -1.f;
+	mat[3][3] = 0.f;
+	return mat;
+}
+
+glm::mat4 BuildProjectionLegacy(float n, float f, float a, float b, float cx, float cy)
+{
+	return glm::make_mat4x4(new float[16]{ a / cx, 0, 0, 0,
+		0, b / cy, 0, 0,
+		0, 0, -(f + n) / (f - n), -(2 * f*n) / (f - n),
+		0, 0, -1, 0 });
+}
 
 template <typename T>
-void PrintMat(cv::Mat pMat)
+void PrintMat(cv::Mat* pMat, int pX = 4, int pY = 4)
 {
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < pX; ++i)
 	{
 		printf("| ");
-		for (int j = 0; j < 4; ++j)
+		for (int j = 0; j < pY; ++j)
 		{
-			printf("%.2f\t\t", pMat.at<T>(i, j));
+			printf("%.2f\t\t", pMat->at<T>(i, j));
 		}
 		printf("|\n");
 	}
@@ -97,22 +168,10 @@ void ShowImageInWindow(cv::Mat pImage)
 float* ODEtoOGL(const dReal* p, const dReal* R)
 {
 	float* M = new float[15];
-	M[0] = R[0];
-	M[1] = R[4];
-	M[2] = R[8];
-	M[3] = 0;
-	M[4] = R[1];
-	M[5] = R[5];
-	M[6] = R[9];
-	M[7] = 0;
-	M[8] = R[2];
-	M[9] = R[6];
-	M[10] = R[10];
-	M[11] = 0;
-	M[12] = p[0];
-	M[13] = p[1];
-	M[14] = p[2];
-	M[15] = 1;
+	M[0] = R[0];	M[1] = R[4];	M[2] = R[8];	M[3] = 0;
+	M[4] = R[1];	M[5] = R[5];	M[6] = R[9];	M[7] = 0;
+	M[8] = R[2];	M[9] = R[6];	M[10] = R[10];	M[11] = 0;
+	M[12] = p[0];	M[13] = p[1];	M[14] = p[2];	M[15] = 1;
 	return M;
 }
 
@@ -154,6 +213,16 @@ std:: vector < double > calcVec(cv:: Vec3d rvec) {
 	return
 		result;
 }
+std::vector<std::string> Split(char* pInput, char pDelim)
+	{
+		auto result = std::vector<std::string>();
+		std::stringstream ss(pInput);
+		std::string item;
+		while (getline(ss, item, pDelim))
+			if (!item.empty())
+				result.push_back(item);
+		return result;
+	};
 
 void glfwErrorCallback(int error, const char* description)
 {

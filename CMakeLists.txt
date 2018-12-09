@@ -90,6 +90,8 @@ endif()
 add_executable(calib "${CMAKE_SOURCE_DIR}/calib/Calib.cpp")
 TARGET_LINK_LIBRARIES(calib ${LINK_LIBS})
 
+add_executable(gen "${CMAKE_SOURCE_DIR}/calib/Generate.cpp")
+TARGET_LINK_LIBRARIES(gen ${LINK_LIBS})
 
 
 IF(WIN32)

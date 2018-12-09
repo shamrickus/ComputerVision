@@ -12,7 +12,7 @@ const char* v_ortho_texture =
 "uniform mat4 MVP;\n" 
 "out vec2 uv;\n"
 "void main() { \n" 
-	"gl_Position = MVP * vec4(vPoints_M.xz, 0.0, 1.0);\n" 
+	"gl_Position = vec4(vPoints_M, 1.0);\n" 
 	"uv = vUV;\n"
 "}\n" ;
 const char* f_ortho_texture =
@@ -31,6 +31,14 @@ public:
 		size_ = pSize;
 		points_ = new float[18]
 		{
+			1,-1,0,
+			-1,1,0,
+			1,1,0,
+
+			-1,1,0,
+			1,-1,0,
+			-1,-1,0
+			/*
 			0,0,0,
 			1,0,0,
 			1,0,1,
@@ -38,6 +46,7 @@ public:
 			1,0,1,
 			0,0,1,
 			0,0,0
+			*/
 			/*
 			base_.x, base_.y, base_.z,
 			base_.x+size_.x, base_.y, base_.z,
@@ -50,12 +59,13 @@ public:
 		};
 		uv_ = new float[12]
 		{
+			1, 1,
 			0, 0,
 			1, 0,
-			1, 1,
+
+			0, 0,
 			1, 1,
 			0, 1,
-			0, 0,
 		};
 
 		vao_ = new VertexBuffer();
