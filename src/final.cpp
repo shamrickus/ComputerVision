@@ -26,11 +26,23 @@
 #include "Objects/Axis.h"
 #include "Timer.h"
 #include "Perf.h"
+#include "Handy/BackgroundRemover.h"
+#include "Handy/SkinDetector.h"
+#include "Handy/FingerCount.h"
+#include "Handy/FaceDetector.h"
 using namespace cv;
 
 
 int main(int argc, char** argv)
 {
+	printf("I am here\n");
+
+	BackgroundRemover backgroundRemover;
+	SkinDetector skinDetector;
+	//FaceDetector faceDetector;
+	FingerCount fingerCount;
+
+	printf("I am here\n");
 	if (!CVLogger::Start())
 		return -1;
 	char out[1000];
