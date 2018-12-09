@@ -24,6 +24,8 @@
 #include "Objects/Screen.h"
 #include "Colors.h"
 #include "Objects/Axis.h"
+#include "Timer.h"
+#include "Perf.h"
 using namespace cv;
 
 
@@ -31,9 +33,15 @@ int main(int argc, char** argv)
 {
 	if (!CVLogger::Start())
 		return -1;
-	srand(100);
+	char out[1000];
+	unsigned int seed = 100;
+	sprintf(out, "Using seed %u\n", seed);
+	CVLogger::Log(out);
+	srand(seed);
 
+	Perf::Init();
 	GLFWwindow* window;
+	Timer* timer = new Timer();
 
 	glfwSetErrorCallback(glfwErrorCallback);
 	if (!glfwInit())
@@ -41,10 +49,6 @@ int main(int argc, char** argv)
 
 	float height = 1080;
 	float width = 1920;
-	/*
-	float height = 800;
-	float width = tag->HWRatio() * 800;
-    */
 	window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
 	if (!window)
 	{
@@ -73,20 +77,14 @@ int main(int argc, char** argv)
 	glLineWidth(3.f);
 
 	diagnostics();
+	sprintf(out, "\nGL/GLFW/GLEW Init Took %.3fms\n", timer->Stop());
+	CVLogger::Log(out);
+	timer->Start();
 
-	Mat image;
-
-	auto vid = VideoCapture("assets/pixel/test2.mp4");
-	vid >> image;
-	//image = imread("assets/pixel/test.jpg", IMREAD_COLOR);
-	if (image.empty())
-	{
-		CVLogger::Log("Could not open or find the image");
-		return -1;
-	}
-
-	auto aruco = new Aruco();
-	auto tag = aruco->ProcessFrame(image, 1);
+	auto aruco = new Aruco("assets/pixel/test2");
+	sprintf(out, "CV Init %.3fms\n", timer->Stop());
+	CVLogger::Log(out);
+	timer->Start();
 
 	float n = 0.1f;
 	float f = 1000.f;
@@ -98,8 +96,6 @@ int main(int argc, char** argv)
 	auto proj2 = glm::perspective(45.f, (float)width / float(height), 0.1f, 1000.f);
 	auto proj1 = BuildProjectionLegacy(n, f, a, b, cx, cy);
 	auto proj = BuildProjection(50.f, width / height, n, f);
-
-
 
 
 	auto world = new World(glm::vec3(0, -2, 0));
@@ -121,66 +117,74 @@ int main(int argc, char** argv)
 
 	screen = new Screen(glm::vec3(0.f), glm::vec3(width, height, 0));
 	//screen = new Screen(glm::vec3(0.f), glm::vec3(tag->HWRatio(), 1, 1) * scale);
-	screen->SetTexture(tag->ToTexture());
-	int frame = 1;
+	sprintf(out, "World init took %.3fms\n", timer->Stop());
+	CVLogger::Log(out);
 
-	while (!glfwWindowShouldClose(window))
+
+	int frameNum = 1;
+	int frameCount = 1;
+	auto mem = Perf::GetMemoryInfo();
+	sprintf(out, "Process Memory: %.2fMB, Peak: %.2fMB\n", (float)mem.usedBy/(1024*1024), (float)mem.usedByPeak/(1024*1024));
+	CVLogger::Log(out);
+	aruco->GetFOV();
+
+	std::vector< std::map<std:: string, double > > frameStats_;
+	do
 	{
-		auto timeStep = drawStatistics(window);
-		auto ortho = glm::ortho(0.f, (float)width, 0.f, (float)height);
-		auto view = glm::identity<glm::mat4>();
-		view[0][0] = 0;
-		view[1][1] = 0;
-		view[2][2] = 0;
-		view[3][3] = 1;
-		auto mvp = proj * view; //* cam->View();
+		std::map<std::string, double> times;
+		timer->Start();
+		auto frame = aruco->ProcessFrame();
+		frame->ToTexture();
+		screen->SetTexture(frame->ToTexture());
+		times["CV"] = timer->Restart(); 
+
+		timer->Start();
+		drawStatistics(window, frameCount++);
+
+		auto mvp = proj; //* cam->View();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		auto t = (*tag)[frame]->GLTransform(scale);
-		auto tg = (*tag)[frame];
+		auto t = (*frame)[frameNum]->GLTransform(scale);
 		screen->Draw(mvp, true);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		for (int i = 0; i < cubes.size(); ++i)
 		{
 			cubes[i]->SetPosition(glm::vec3(0));
-			//cubes[i]->Draw(proj*t, Yellow());
+			auto rot = glm::rotate(proj, 3.14f / 4, glm::vec3(0, 1, 0))*t;
+			cubes[i]->Draw(rot, Yellow());
 			cubes[i]->SetPosition(glm::vec3(0.065,0,0.235));
-			cubes[i]->Draw(glm::rotate(proj, 3.14f/4, glm::vec3(0,1,0))*t, Green());
-			/*auto corner = tg->Corner();
-			auto retT = glm::rotate(t, 3.14f/2, glm::vec3(0, 1, 0));
-			corner[0] /= 1000;
-			cubes[i]->SetPosition(glm::vec3(-corner[0].x/2, 0.f, -corner[0].y/2));
-			//cubes[i]->Draw(t, Red());
-
-			cubes[i]->SetPosition(glm::vec3(0));
-			auto proj = aruco->Projection(0.1f, 100.f, 0, 0, 5.f, 5.f);
-			auto mat4 = glm::make_mat4x4(proj);
-			//cubes[i]->Draw(t, Yellow());
-
-			cubes[i]->SetPosition(glm::vec3(0));
-			auto rot = tg->RotationRaw();
-			auto x = tg->Corner()[0].x;
-			auto y = tg->Corner()[0].y;
-			auto calc = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, y));
-			calc = glm::rotate(calc, 57.13f*(float)cv::norm(tg->RotationRaw()), glm::vec3((float)rot[0], -rot[1], -rot[2]));
-			//cubes[i]->Draw(calc, Teal(), true);
-
-			cubes[i]->SetPosition(glm::vec3(corner[0].x/2, 0.f, corner[0].y/2));
-			//cubes[i]->Draw(glm::transpose(t), Green());*/
+			cubes[i]->Draw(rot, Green());
 		}
 		axis->Draw(mvp);
 
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
+		times["CPUDraw"] = (timer->Restart());
+
 		cam->Update(window);
+		times["CamUpdate"] = (timer->Restart());
 
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS ||
 			glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			break;
 
 		world->Update(1.f / 60);
+		times["Physics"] = timer->Restart();
+
 		glErrorCheck(__LINE__, __FILE__);
-	}
+		frameStats_.push_back(times);
+
+		if(frameCount % 100 == 0)
+		{
+			char out[1024];
+			sprintf(out, "Frame %i:\nCV Time: %.3f, CPUDraw Time: %.3f, CamUpdate Time: %.3f, Phsyics Time: %.3f\n",
+				frameCount, times["CV"], times["CPUDraw"], times["CamUpdate"], times["Physics"]);
+			CVLogger::Log(out);
+			mem = Perf::GetMemoryInfo();
+			sprintf(out, "Mem used: %.2f, Peak: %.2f\n", (float)mem.usedBy / (1024 * 1024), (float)mem.usedByPeak / (1024 * 1024));
+		CVLogger::Log(out);
+		}
+	} while (!glfwWindowShouldClose(window));
 
 	glfwDestroyWindow(window);
 	glfwTerminate();

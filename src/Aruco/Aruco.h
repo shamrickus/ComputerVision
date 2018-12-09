@@ -9,8 +9,9 @@
 class Aruco
 {
 public:
-	Aruco()
+	Aruco(std::string pPath)
 	{
+		path_ = pPath;
 		tagType_ = cv::aruco::DICT_4X4_1000;
 		//tagType_ = cv::aruco::DICT_4X4_250;
 		markerLength_ = 1.75f;
@@ -18,14 +19,9 @@ public:
 		dict_ = cv::aruco::getPredefinedDictionary(tagType_);
 		detector_ = cv::aruco::DetectorParameters::create();
 
-		float K_[3][3] =
-		{ { 675, 0, 320 },
-		{ 0, 675, 240 },
-		{ 0, 0, 1 } };
-		k_ = cv::Mat(3, 3, CV_32F, K_).clone();
-		float dist_[] = { 0,0,0,0,0 };
-		distCoeffs_ = cv::Mat(5, 1, CV_32F, dist_).clone();
 		//ReadInCamera("assets/pixel/calib.txt");
+		ReadInCamera(pPath + ".txt");
+		vid_ = cv::VideoCapture(pPath + ".mp4");
 	}
 
 	void ReadInCamera(std::string pPath)
@@ -35,50 +31,63 @@ public:
 		file[0] = file[0].substr(4, file[0].size());
 		assert(file[1].find("dist:") == 0);
 		file[1] = file[1].substr(5, file[1].size());
+		assert(file[2].find("len:") == 0);
+		file[2] = file[2].substr(4, file[2].size());
 		auto intrinParams = Split((char*)file[0].c_str(), ',');
 		assert(intrinParams.size() == 9);
 		auto distCoef = Split((char*)file[1].c_str(), ',');
 		assert(distCoef.size() == 5);
-		double K_[3][3] = { {stod(intrinParams[0]), stod(intrinParams[1]), stod(intrinParams[2])},
-		{stod(intrinParams[3]), stod(intrinParams[4]), stod(intrinParams[5])},
-		{stod(intrinParams[6]), stod(intrinParams[7]), stod(intrinParams[8])} };
+		auto len = Split((char*)file[2].c_str(), ',');
+		assert(len.size() == 1);
+
+		float K_[3][3] = { {stof(intrinParams[0]), stof(intrinParams[1]), stof(intrinParams[2])},
+		{stof(intrinParams[3]), stof(intrinParams[4]), stof(intrinParams[5])},
+		{stof(intrinParams[6]), stof(intrinParams[7]), stof(intrinParams[8])} };
 		k_ = cv::Mat(3, 3, CV_32F, K_).clone();
 
-		double dist[5] = { stod(distCoef[0]),stod(distCoef[1]),stod(distCoef[2]),stod(distCoef[3]),stod(distCoef[4]) };
+		float dist[5] = { stof(distCoef[0]),stof(distCoef[1]),stof(distCoef[2]),stof(distCoef[3]),stof(distCoef[4]) };
 
 		distCoeffs_ = cv::Mat(5, 1, CV_32F, dist).clone();
+		markerLength_ = stof(len[0]);
 	}
 
-	ArucoFrame* ProcessFrame(cv::Mat &pImage, int pFrameNumber)
+	ArucoFrame* ProcessFrame()
 	{
+		if (vid_.grab())
+			vid_.read(lastImage_);
+		else
+			return  tags_.back();
 		std::vector<std::vector<cv::Point2f> > corners, rejects;
 		std::vector<int> markerIds;
 		
-		cv::aruco::detectMarkers(pImage, dict_, corners,
+		cv::aruco::detectMarkers(lastImage_, dict_, corners,
 			markerIds, detector_, rejects);
-		if(markerIds.empty())
-		{
-			CVLogger::Log("Unable to find tags on frame " + pFrameNumber);
-			return new ArucoFrame();
-		}
+		assert(markerIds.size());
+
 		std::vector< cv::Vec3d> rVecs, tVecs;
 		cv::aruco::estimatePoseSingleMarkers(corners, markerLength_, k_,
 			distCoeffs_, rVecs, tVecs);
-		cv::aruco::drawDetectedMarkers(pImage, corners, markerIds);
-		PrintMat<float>(&distCoeffs_, 5, 1);
-		PrintMat<float>(&k_, 3, 3);
+		cv::aruco::drawDetectedMarkers(lastImage_, corners, markerIds);
 
-		ArucoFrame* tags = new ArucoFrame(pImage);
+		ArucoFrame* tags = new ArucoFrame(lastImage_);
 		for(int i = 0; i < markerIds.size(); ++i)
 		{
 			auto rvec = rVecs[i];
 			auto tvec = tVecs[i];
 			auto tag = new ArucoTag(corners[i], markerIds[i], rvec, tvec);
 			tags->Add(markerIds[i], tag);
-			//cv::aruco::drawAxis(pImage, k_, distCoeffs_, rvec, tvec, markerLength_*.4f);
+			//cv::aruco::drawAxis(lastImage_, k_, distCoeffs_, rvec, tvec, markerLength_*.4f);
 		}
 		tags_.push_back(tags);
 		return tags;
+	}
+
+	float GetFOV()
+	{
+		double fovX, fovY, a, b, c;
+		cv::Point2d pnt;
+		cv::calibrationMatrixValues(k_, cv::Size(1920, 1080), 32, 32, fovX, fovY, a, pnt, c);
+		return 0;
 	}
 
 	cv::Vec3d Project(int pIndex, float* pPoint)
@@ -115,6 +124,9 @@ private:
 	cv::Ptr<cv::aruco::Dictionary> dict_;
 	cv::Ptr<cv::aruco::DetectorParameters> detector_;
 	cv::Mat k_, distCoeffs_;
+	std::string path_;
+	cv::VideoCapture vid_;
+	cv::Mat lastImage_;
 };
 
 #endif

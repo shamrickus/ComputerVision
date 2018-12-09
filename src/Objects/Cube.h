@@ -70,13 +70,6 @@ public:
 		shader_->AttachShader(fs);
 		shader_->Link();
 
-		shader2D_ = new ShaderProgram();
-		auto vs1 = new Shader(v_2D_xz_passthru, ShaderType::Vertex);
-		auto fs1 = new Shader(f_passthru , ShaderType::Fragment);
-		shader2D_->AttachShader(vs1);
-		shader2D_->AttachShader(fs1);
-		shader2D_->Link();
-
 		size_ = glm::vec3(1);
 		density_ = 1;
 		color_ = glm::vec3(rand()%100/100.f, rand()%100/100.f, rand()%100/100.f);
@@ -159,35 +152,6 @@ public:
 		Draw(pMVP);
 	}
 
-	void Draw(glm::mat4 pMVP, glm::vec3 pColor, bool pOrtho)
-	{
-		color_ = pColor;
-
-		ShaderProgram* shader;
-		if (pOrtho)
-			shader = shader2D_;
-		else
-			shader = shader_;
-		vao_->Bind();
-		shader->Activate();
-		auto mvpHandle = shader->GetHandle("MVP");
-		auto mvp = pMVP *GetScreenTransform();
-		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
-
-		auto colorHandle = shader->GetHandle("nColor");
-		glUniform3fv(colorHandle, 1,&color_[0]);
-
-		vao_->BindAttrib(vbo_, 0, 3);
-		vao_->Draw(12 * 3);
-
-		auto outline = glm::vec3(0);
-		glUniform3fv(colorHandle, 1,&outline[0]);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		vao_->Bind();
-		vao_->Draw(12 * 3);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glErrorCheck(__LINE__, __FILE__);
-	}
 
 	~Cube()
 	{
@@ -200,7 +164,7 @@ private:
 	DeviceBuffer * vbo_;
 	VertexBuffer* vao_;
 	float *points_;
-	ShaderProgram* shader_, *shader2D_;
+	ShaderProgram* shader_;
 	glm::vec3 color_;
 };
 

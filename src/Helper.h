@@ -2,6 +2,7 @@
 #define _HELPER_H_
 #include "Buffer/VertexBuffer.h"
 #include "CVLogger.h"
+#include "Timer.h"
 
 void glErrorCheck(int pLine, const char* pFile)
 {
@@ -230,26 +231,21 @@ void glfwErrorCallback(int error, const char* description)
 	CVLogger::Log(description);
 }
 
-double drawStatistics(GLFWwindow* window)
+void drawStatistics(GLFWwindow* window, int frameCount)
 {
-	static double lastMeasuredTime = glfwGetTime();
+	static Timer timer;
 	static int framesSinceLastUpdate = 0;
-	static size_t frameCount;
-	double currentTime = glfwGetTime();
-	double elapsed = currentTime - lastMeasuredTime;
+	double elapsed = timer.Elapsed();
 	if (elapsed > (double)1 / 15)
 	{
-		lastMeasuredTime = currentTime;
 		char outputText[256];
-		sprintf(outputText, "FPS: %.0f, FT: %.4fms, F: %llu",
+		sprintf(outputText, "FPS: %.0f, FT: %.4fms, F: %i",
 		        ((float)framesSinceLastUpdate / elapsed),
 		        elapsed / framesSinceLastUpdate, frameCount);
 		glfwSetWindowTitle(window, outputText);
 		framesSinceLastUpdate = 0;
+		timer.Restart();
 	}
-	frameCount++;
-
-	return elapsed / (1 + framesSinceLastUpdate++);
 }
 
 
