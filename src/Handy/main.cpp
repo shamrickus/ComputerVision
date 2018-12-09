@@ -36,24 +36,24 @@ int main2(int, char**) {
 		skinDetector.drawSkinColorSampler(frameOut);
 
 		foreground = backgroundRemover.getForeground(frame);
-		
-		faceDetector.removeFaces(frame, foreground);
-		handMask = skinDetector.getSkinMask(foreground);
-		fingerCountDebug = fingerCount.findFingersCount(handMask, frameOut);
+		//
+		//faceDetector.removeFaces(frame, foreground);
+		//handMask = skinDetector.getSkinMask(foreground);
+		//fingerCountDebug = fingerCount.findFingersCount(handMask, frameOut);
 
-		imshow("output", frameOut);
-		imshow("foreground", foreground);
-		imshow("handMask", handMask);
-		imshow("handDetection", fingerCountDebug);
-		
-		int key = waitKey(1);
+		//imshow("output", frameOut);
+		//imshow("foreground", foreground);
+		//imshow("handMask", handMask);
+		//imshow("handDetection", fingerCountDebug);
+		//
+		//int key = waitKey(1);
 
-		if (key == 27) // esc
-			break;
-		else if (key == 98) // b
-			backgroundRemover.calibrate(frame);
-		else if (key == 115) // s
-			skinDetector.calibrate(frame);
+		//if (key == 27) // esc
+		//	break;
+		//else if (key == 98) // b
+		//	backgroundRemover.calibrate(frame);
+		//else if (key == 115) // s
+		//	skinDetector.calibrate(frame);
 	}
 
 	return 0;

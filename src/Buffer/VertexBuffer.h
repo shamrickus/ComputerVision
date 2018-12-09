@@ -56,12 +56,13 @@ public:
 	{
 		switch(draw_)
 		{
-		case Tri:
-			return GL_TRIANGLES;
 		case Line:
 			return GL_LINES;
 		case LineLoop:
 			return GL_LINE_LOOP;
+		case Tri:
+		default:
+			return GL_TRIANGLES;
 		}
 	}
 

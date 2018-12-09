@@ -80,7 +80,6 @@ public:
 		return GetTranslation() *
 			GetScale() *
 			GetRotation();
-			//Rotate(GetRotation(), -3.14f/2, glm::vec3(0,0,1));
 	}
 
 	glm::mat4 Rotate(glm::mat4 mat, float pAngle, glm::vec3 pAxis)

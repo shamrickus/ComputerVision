@@ -21,6 +21,14 @@ public:
 		return tags_[pIndex];
 	}
 
+	std::map<int, ArucoTag*>::iterator TagsIterator() {
+		return tags_.begin();
+	}
+
+	std::map<int, ArucoTag*>::iterator End() {
+		return tags_.end();
+	}
+
 	GLuint ToTexture()
 	{
 		if(!glIsTexture(tex_))

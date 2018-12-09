@@ -12,7 +12,7 @@ using namespace std;
 class FingerCount {
 	public:
 		FingerCount(void);
-		Mat findFingersCount(Mat input_image, Mat frame);
+		std::pair<Mat, std::vector<cv::Point> >  findFingersCount(Mat input_image, Mat frame);
 	
 	private:
 		Scalar color_blue;

@@ -22,16 +22,17 @@ FingerCount::FingerCount(void) {
 	color_purple = Scalar(255, 0, 255);
 }
 
-Mat FingerCount::findFingersCount(Mat input_image, Mat frame) {
+std::pair<Mat, std::vector<cv::Point> > FingerCount::findFingersCount(Mat input_image, Mat frame) {
 	Mat contours_image = Mat::zeros(input_image.size(), CV_8UC3);
+	auto pir = std::pair<Mat, std::vector<cv::Point>  >(contours_image, std::vector<Point>());
 
 	// check if the source image is good
 	if (input_image.empty())
-		return contours_image;
+		return pir;
 
 	// we work only on the 1 channel result, since this function is called inside a loop we are not sure that this is always the case
 	if (input_image.channels() != 1)
-		return contours_image;
+		return pir;
 
 	vector<vector<Point>> contours;
 	vector<Vec4i> hierarchy;
@@ -40,7 +41,7 @@ Mat FingerCount::findFingersCount(Mat input_image, Mat frame) {
 
 	// we need at least one contour to work
 	if (contours.size() <= 0)
-		return contours_image;
+		return pir;
 
 	// find the biggest contour (let's suppose it's our hand)
 	int biggest_contour_index = -1;
@@ -55,7 +56,7 @@ Mat FingerCount::findFingersCount(Mat input_image, Mat frame) {
 	}
 
 	if (biggest_contour_index < 0)
-		return contours_image;
+		return pir;
 
 	// find the convex hull object for each contour and the defects, two different data structure are needed by the OpenCV api
 	vector<Point> hull_points;
@@ -72,7 +73,7 @@ Mat FingerCount::findFingersCount(Mat input_image, Mat frame) {
 	if (hull_ints.size() > 3)
 		convexityDefects(Mat(contours[biggest_contour_index]), hull_ints, defects);
 	else
-		return contours_image;
+		return pir;
 
 	// we bound the convex hull
 	Rect bounding_rectangle = boundingRect(Mat(hull_points));
@@ -148,8 +149,9 @@ Mat FingerCount::findFingersCount(Mat input_image, Mat frame) {
 	circle(frame, center_bounding_rect, 5, color_purple, 2, 8);
 	drawVectorPoints(frame, filtered_finger_points, color_yellow, false);
 	putText(frame, to_string(filtered_finger_points.size()), center_bounding_rect, FONT_HERSHEY_PLAIN, 3, color_purple);
-
-	return contours_image;
+	pir.first = frame;
+	pir.second = filtered_finger_points;
+	return pir;
 }
 
 double FingerCount::findPointsDistance(Point a, Point b) {

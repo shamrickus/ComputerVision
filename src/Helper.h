@@ -19,7 +19,7 @@ std::vector<glm::vec3> ReadInOBJ(const char* pFile)
 	{
 		FILE* fp = fopen(pFile, "r");
 
-		if(fp != nullptr)
+		assert(fp != nullptr);
 		{
 			std::vector<glm::vec3 > vertices;
 			std::vector<unsigned int> vIndicies;

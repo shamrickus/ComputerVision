@@ -9,21 +9,23 @@
 class Aruco
 {
 public:
-	Aruco(std::string pPath)
-	{
-		path_ = pPath;
+	Aruco() {
+		ReadInCamera("assets/pixel/test2.txt");
 		tagType_ = cv::aruco::DICT_4X4_1000;
 		//tagType_ = cv::aruco::DICT_4X4_250;
-		markerLength_ = 1.75f;
-		//markerLength_ = 0.054;
 		dict_ = cv::aruco::getPredefinedDictionary(tagType_);
 		detector_ = cv::aruco::DetectorParameters::create();
-
-		//ReadInCamera("assets/pixel/calib.txt");
+	}
+	Aruco(std::string pPath) : Aruco()
+	{
+		path_ = pPath;
 		ReadInCamera(pPath + ".txt");
 		vid_ = cv::VideoCapture(pPath + ".mp4");
 	}
-
+	Aruco(int pCapturePort) : Aruco() {
+		vid_ = cv::VideoCapture(pCapturePort);
+		assert(vid_.isOpened());
+	}
 	void ReadInCamera(std::string pPath)
 	{
 		auto file = File::ReadFile(pPath.c_str());

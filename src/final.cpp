@@ -35,14 +35,11 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-	printf("I am here\n");
-
 	BackgroundRemover backgroundRemover;
 	SkinDetector skinDetector;
 	//FaceDetector faceDetector;
 	FingerCount fingerCount;
 
-	printf("I am here\n");
 	if (!CVLogger::Start())
 		return -1;
 	char out[1000];
@@ -93,7 +90,8 @@ int main(int argc, char** argv)
 	CVLogger::Log(out);
 	timer->Start();
 
-	auto aruco = new Aruco("assets/pixel/test2");
+	auto aruco = new Aruco("assets/test3");
+	//auto aruco = new Aruco(0);
 	sprintf(out, "CV Init %.3fms\n", timer->Stop());
 	CVLogger::Log(out);
 	timer->Start();
@@ -138,32 +136,54 @@ int main(int argc, char** argv)
 	auto mem = Perf::GetMemoryInfo();
 	sprintf(out, "Process Memory: %.2fMB, Peak: %.2fMB\n", (float)mem.usedBy/(1024*1024), (float)mem.usedByPeak/(1024*1024));
 	CVLogger::Log(out);
-	aruco->GetFOV();
+	int req = 60;
+	auto t2 = new Timer();
 
 	std::vector< std::map<std:: string, double > > frameStats_;
 	do
 	{
 		std::map<std::string, double> times;
 		timer->Start();
+		t2->Start();
 		auto frame = aruco->ProcessFrame();
+		auto image = frame->Image();
+		skinDetector.drawSkinColorSampler(image);
+		auto fg = backgroundRemover.getForeground(image);
+		auto mask = skinDetector.getSkinMask(fg);
+		auto fc = fingerCount.findFingersCount(mask, image);
+		if (frameCount < req/2)
+			backgroundRemover.calibrate(image);
+
+		if (frameCount == req)
+			skinDetector.calibrate(image);
+
+		if (frameCount > req) {
+			cv::imshow("out", image);
+			cv::imshow("fg", fg);
+			cv::imshow("mask", mask);
+			cv::imshow("hand", fc.first);
+		}
+		times["Handy"] = t2->Stop();
 		frame->ToTexture();
+
 		screen->SetTexture(frame->ToTexture());
 		times["CV"] = timer->Restart(); 
 
 		timer->Start();
 		drawStatistics(window, frameCount++);
-
+		
 		auto mvp = proj; //* cam->View();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		auto t = (*frame)[frameNum]->GLTransform(scale);
-		//screen->Draw(mvp, true);
+		screen->Draw(mvp, true);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		auto rot = glm::rotate(proj, 3.14f / 4, glm::vec3(0, 1, 0))*t;
 		auto rot2 = glm::rotate(proj, -3.14f / 4, glm::vec3(0, 0, 1))*t;
 		rot2 = glm::rotate(rot2, -3.14f / 4, glm::vec3(1, 0, 0))*t;
 		grid->SetPosition(glm::vec3(1, 0, 0));
-		grid->Draw(glm::scale(proj, glm::vec3(0.2, 0.2, 0.2)));
-		grid->Draw(glm::scale(rot2, glm::vec3(0.2, 0.2, 0.2)));
+		//grid->Draw(glm::scale(proj, glm::vec3(0.2, 0.2, 0.2)));
+		//grid->Draw(glm::scale(rot2, glm::vec3(0.2, 0.2, 0.2)));
+
 		for (int i = 0; i < cubes.size(); ++i)
 		{
 			cubes[i]->SetPosition(glm::vec3(0));
@@ -194,8 +214,8 @@ int main(int argc, char** argv)
 		if(frameCount % 100 == 0)
 		{
 			char out[1024];
-			sprintf(out, "Frame %i:\nCV Time: %.3f, CPUDraw Time: %.3f, CamUpdate Time: %.3f, Phsyics Time: %.3f\n",
-				frameCount, times["CV"], times["CPUDraw"], times["CamUpdate"], times["Physics"]);
+			sprintf(out, "Frame %i:\nHandy Time: %.3f, CV Time: %.3f, CPUDraw Time: %.3f, CamUpdate Time: %.3f, Phsyics Time: %.3f\n",
+				frameCount, times["Handy"], times["CV"], times["CPUDraw"], times["CamUpdate"], times["Physics"]);
 			CVLogger::Log(out);
 			mem = Perf::GetMemoryInfo();
 			sprintf(out, "Mem used: %.2f, Peak: %.2f\n", (float)mem.usedBy / (1024 * 1024), (float)mem.usedByPeak / (1024 * 1024));
