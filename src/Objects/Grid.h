@@ -11,8 +11,8 @@ public:
 	Grid(glm::vec3 pBase) : PhysObject(pBase)
 	{
 		type_ = Center;
-		step_ = 50;
-		gridSize_ = 500;
+		step_ = 1;
+		gridSize_ = 20;
 
 		vao_ = new VertexBuffer(Line);
 		vbo_ = new DeviceBuffer();
@@ -93,18 +93,20 @@ public:
 		vao_->Bind();
 		shader_->Activate();
 		auto mvpHandle = shader_->GetHandle("MVP");
-		auto mvp = pMVP * GetScreenTransform();
-		auto color = glm::vec3(0.3);
+		auto mvp = pMVP; //* GetScreenTransform();
+		auto color = glm::vec3(1);
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
 		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
 		vao_->BindAttrib(vbo_, 0, 3);
-		vao_->Draw(PointCount());
+		vao_->Draw(PointCount()*9);
 
+		/*
 		fill_->Bind();
-		color = glm::vec3(1);
+		color = glm::vec3(0.75);
 		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
 		fill_->BindAttrib(fillB_, 0, 3);
 		fill_->Draw(6 * 3);
+		*/
 
 		glErrorCheck(__LINE__, __FILE__);
 

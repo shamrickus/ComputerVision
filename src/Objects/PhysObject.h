@@ -27,6 +27,7 @@ public:
 	{
 		Object::SetSize(pSize);
 	}
+
 protected:
 	glm::mat4 GetScreenTransform() override
 	{

@@ -144,12 +144,17 @@ int main(int argc, char** argv)
 		auto mvp = proj; //* cam->View();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		auto t = (*frame)[frameNum]->GLTransform(scale);
-		screen->Draw(mvp, true);
+		//screen->Draw(mvp, true);
 		glClear(GL_DEPTH_BUFFER_BIT);
+		auto rot = glm::rotate(proj, 3.14f / 4, glm::vec3(0, 1, 0))*t;
+		auto rot2 = glm::rotate(proj, -3.14f / 4, glm::vec3(0, 0, 1))*t;
+		rot2 = glm::rotate(rot2, -3.14f / 4, glm::vec3(1, 0, 0))*t;
+		grid->SetPosition(glm::vec3(1, 0, 0));
+		grid->Draw(glm::scale(proj, glm::vec3(0.2, 0.2, 0.2)));
+		grid->Draw(glm::scale(rot2, glm::vec3(0.2, 0.2, 0.2)));
 		for (int i = 0; i < cubes.size(); ++i)
 		{
 			cubes[i]->SetPosition(glm::vec3(0));
-			auto rot = glm::rotate(proj, 3.14f / 4, glm::vec3(0, 1, 0))*t;
 			cubes[i]->Draw(rot, Yellow());
 			cubes[i]->SetPosition(glm::vec3(0.065,0,0.235));
 			cubes[i]->Draw(rot, Green());
