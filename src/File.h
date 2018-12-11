@@ -35,6 +35,17 @@ public:
 
 		return file;
 	}
+	static bool WriteToFile(std::string pFileName, std::string pText)
+	{
+		FILE* fp = fopen(pFileName.c_str(), "w");
+		if (fp == nullptr)
+			return false;
+
+		fprintf(fp, pText.c_str());
+
+		fclose(fp);
+		return true;
+	}
 	static std::string ReadFileToStr(const char* pFileName)
 	{
 		char line[255];

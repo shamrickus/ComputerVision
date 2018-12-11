@@ -38,24 +38,6 @@ public:
 			-1,1,0,
 			1,-1,0,
 			-1,-1,0
-			/*
-			0,0,0,
-			1,0,0,
-			1,0,1,
-
-			1,0,1,
-			0,0,1,
-			0,0,0
-			*/
-			/*
-			base_.x, base_.y, base_.z,
-			base_.x+size_.x, base_.y, base_.z,
-			base_.x+size_.x, base_.y, base_.z + size_.z,
-
-			base_.x+size_.x, base_.y, base_.z + size_.z,
-			base_.x, base_.y, base_.z + size_.z,
-			base_.x, base_.y, base_.z,
-		*/
 		};
 		uv_ = new float[12]
 		{
@@ -95,7 +77,11 @@ public:
 		assert(vao_->Validate());
 	}
 
-	void SetTexture(GLuint pTex) { tex_ = pTex; }
+	void SetTexture(GLuint pTex)
+	{
+		if (pTex != tex_);
+		tex_ = pTex;
+	}
 
 	void Draw(glm::mat4 pMVP, bool pOrtho)
 	{

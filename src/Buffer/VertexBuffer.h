@@ -6,7 +6,7 @@
 
 enum VertexDrawType
 {
-	Tri, Line, LineLoop
+	Tri, Line, LineLoop, LineStrip
 };
 
 class VertexBuffer
@@ -58,6 +58,8 @@ public:
 		{
 		case Line:
 			return GL_LINES;
+		case LineStrip:
+			return GL_LINE_STRIP;
 		case LineLoop:
 			return GL_LINE_LOOP;
 		case Tri:

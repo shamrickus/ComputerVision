@@ -11,7 +11,6 @@ class Cube : public PhysObject
 public:
 	Cube(glm::vec3 pBase) : PhysObject(pBase)
 	{
-		/*
 		points_ = new float[12*9]{
 			-1.0f,-1.0f,-1.0f, // triangle 1 : begin
 			-1.0f,-1.0f, 1.0f,
@@ -50,15 +49,14 @@ public:
 			-1.0f, 1.0f, 1.0f,
 			1.0f,-1.0f, 1.0f
 		};
-		*/
-		auto ptns = ReadInOBJ("assets/cube.obj");
-		points_ = new float[ptns.size() * 3];
-		for(int i = 0; i < ptns.size(); ++i)
-		{
-			points_[i * 3 + 0] = ptns[i].x;
-			points_[i * 3 + 1] = ptns[i].y;
-			points_[i * 3 + 2] = ptns[i].z;
-		}
+		//auto ptns = ReadInOBJ("assets/cube.obj");
+		//points_ = new float[ptns.size() * 3];
+		//for(int i = 0; i < ptns.size(); ++i)
+		//{
+		//	points_[i * 3 + 0] = ptns[i].x;
+		//	points_[i * 3 + 1] = ptns[i].y;
+		//	points_[i * 3 + 2] = ptns[i].z;
+		//}
 		vbo_ = new DeviceBuffer();
 		vao_ = new VertexBuffer();
 		vbo_->BindData(12 * 3 * 3 * sizeof(float), points_);
@@ -71,16 +69,12 @@ public:
 		shader_->Link();
 
 		size_ = glm::vec3(1);
-		density_ = 1;
+		density_ = .1;
 		color_ = glm::vec3(rand()%100/100.f, rand()%100/100.f, rand()%100/100.f);
 	}
 
-	glm::mat4 GetScreenTransform() override
-	{
-		return GetTranslation() *
-			GetScale() *
-			GetRotation();
-	}
+	void SetColor(glm::vec3 pColor) { color_ = pColor; }
+
 
 	glm::mat4 Rotate(glm::mat4 mat, float pAngle, glm::vec3 pAxis)
 	{
@@ -119,6 +113,11 @@ public:
 	float* GetPoints()
 	{
 		return  points_;
+	}
+
+	glm::mat4 GetScale() override
+	{
+		return glm::scale(glm::identity<glm::mat4>(), glm::vec3(.1f));
 	}
 
 	void Draw(glm::mat4 pMVP) override

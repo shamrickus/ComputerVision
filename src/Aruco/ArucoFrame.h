@@ -21,12 +21,29 @@ public:
 		return tags_[pIndex];
 	}
 
+	bool Contains(int pIndex)
+	{
+		return tags_.find(pIndex) != tags_.end();
+	}
+
 	std::map<int, ArucoTag*>::iterator TagsIterator() {
 		return tags_.begin();
 	}
 
 	std::map<int, ArucoTag*>::iterator End() {
 		return tags_.end();
+	}
+
+	glm::mat4 GetGround() {
+		if (Contains(1))
+			return tags_[1]->GLTransform(1);
+		glm::mat4 ret = glm::identity<glm::mat4>();
+		for(auto i = TagsIterator(); i!=End(); ++i)
+		{
+			ret += i->second->GLTransform(1);
+		}
+		ret /= (float)(tags_.size());
+		return glm::identity<glm::mat4>();
 	}
 
 	GLuint ToTexture()
@@ -44,6 +61,7 @@ public:
 			glPixelStorei(GL_UNPACK_ROW_LENGTH, image_.step/image_.elemSize());
 			glTexImage2D(GL_TEXTURE_2D,0,3,image_.cols, image_.rows,
 				0,GL_BGR,GL_UNSIGNED_BYTE, image_.data);
+			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 		return tex_;
 	}

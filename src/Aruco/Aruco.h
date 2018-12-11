@@ -11,8 +11,7 @@ class Aruco
 public:
 	Aruco() {
 		ReadInCamera("assets/pixel/test2.txt");
-		tagType_ = cv::aruco::DICT_4X4_1000;
-		//tagType_ = cv::aruco::DICT_4X4_250;
+		tagType_ = cv::aruco::DICT_4X4_250;
 		dict_ = cv::aruco::getPredefinedDictionary(tagType_);
 		detector_ = cv::aruco::DetectorParameters::create();
 	}
@@ -55,16 +54,20 @@ public:
 
 	ArucoFrame* ProcessFrame()
 	{
+		cv::Mat lastImage_;
 		if (vid_.grab())
 			vid_.read(lastImage_);
 		else
 			return  tags_.back();
+		if (lastImage_.empty())
+			lastImage_ = this->lastImage_;
 		std::vector<std::vector<cv::Point2f> > corners, rejects;
 		std::vector<int> markerIds;
 		
 		cv::aruco::detectMarkers(lastImage_, dict_, corners,
 			markerIds, detector_, rejects);
-		assert(markerIds.size());
+		if (markerIds.empty())
+			return nullptr;
 
 		std::vector< cv::Vec3d> rVecs, tVecs;
 		cv::aruco::estimatePoseSingleMarkers(corners, markerLength_, k_,
@@ -81,6 +84,7 @@ public:
 			//cv::aruco::drawAxis(lastImage_, k_, distCoeffs_, rvec, tvec, markerLength_*.4f);
 		}
 		tags_.push_back(tags);
+		this->lastImage_ = lastImage_;
 		return tags;
 	}
 

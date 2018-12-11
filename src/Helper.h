@@ -3,6 +3,7 @@
 #include "Buffer/VertexBuffer.h"
 #include "CVLogger.h"
 #include "Timer.h"
+#include "File.h"
 
 void glErrorCheck(int pLine, const char* pFile)
 {
@@ -168,7 +169,7 @@ void ShowImageInWindow(cv::Mat pImage)
 
 float* ODEtoOGL(const dReal* p, const dReal* R)
 {
-	float* M = new float[15];
+	float* M = new float[16];
 	M[0] = R[0];	M[1] = R[4];	M[2] = R[8];	M[3] = 0;
 	M[4] = R[1];	M[5] = R[5];	M[6] = R[9];	M[7] = 0;
 	M[8] = R[2];	M[9] = R[6];	M[10] = R[10];	M[11] = 0;
@@ -225,6 +226,30 @@ std::vector<std::string> Split(char* pInput, char pDelim)
 		return result;
 	};
 
+void Dump(std::vector< std::map<std::string, double> > pStats)
+{
+
+	std::string output;
+	bool first = true;
+	for(auto& datapoint: pStats)
+	{
+			for(auto& point: datapoint)
+			{
+				if(first)
+				{
+					output += point.first + ",";
+				}
+				else
+				{
+					output += std::to_string(point.second) + ",";
+				}
+			}
+			first = false;
+			output += "\n";
+	}
+	File::WriteToFile("assets/dump.csv", output);
+}
+
 void glfwErrorCallback(int error, const char* description)
 {
 	fprintf(stderr, "glfw error (%i): %s\n", error, description);
@@ -246,6 +271,7 @@ void drawStatistics(GLFWwindow* window, int frameCount)
 		framesSinceLastUpdate = 0;
 		timer.Restart();
 	}
+	framesSinceLastUpdate++;
 }
 
 

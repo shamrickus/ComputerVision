@@ -15,7 +15,7 @@ public:
 		base_ = pBase;
 	}
 	
-	void SetPosition(glm::vec3 pPos)
+	virtual void SetPosition(glm::vec3 pPos)
 	{
 		base_ = pPos;
 	}

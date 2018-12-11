@@ -15,10 +15,10 @@ public:
 		bodies_ = std::vector<dBodyID>();
 		dWorldSetGravity(world_, pGravity.x, pGravity.y, pGravity.z);
 		dWorldSetCFM(world_, 1e-5);
-		dWorldSetLinearDamping(world_, 0.00005);
-		dWorldSetAngularDamping(world_, 0.015);
+		dWorldSetLinearDamping(world_, 0.05);
+		dWorldSetAngularDamping(world_, 0.05);
 		dWorldSetMaxAngularSpeed(world_, 100);
-		dWorldSetContactSurfaceLayer(world_, 0.005);
+		dWorldSetContactSurfaceLayer(world_, 0.001);
 	}
 
 	~World()
@@ -39,13 +39,16 @@ public:
 			dBodySetKinematic(body);
 		dGeomSetCategoryBits(pBody->Geom(), pCategoryBits);
 		dGeomSetCollideBits(pBody->Geom(), pCollideBits);
+		dMatrix3 r;
+		dRSetIdentity(r);
+		dGeomSetRotation(pBody->Geom(), r);
 		bodies_.push_back(body);
 	}
 
 	void Update(float pTimeStep)
 	{
 		dSpaceCollide(space_, this, &nearC);
-		dWorldStep(world_, pTimeStep);
+		dWorldQuickStep(world_, pTimeStep);
 		dJointGroupEmpty(group_);
 	}
 	dWorldID GetWorld() { return world_; }
@@ -74,7 +77,7 @@ void nearC(void * data, dGeomID p1, dGeomID p2)
 	contact.surface.mode = dContactBounce;
 	contact.surface.mu = 5;
 	contact.surface.bounce = 0.20;
-	contact.surface.bounce_vel = 0.01;
+	contact.surface.bounce_vel = 0.001;
 	if (dCollide(p1, p2, 1, &contact.geom, sizeof(dContactGeom)))
 	{
 		dJointID c = dJointCreateContact(world->GetWorld(), 

@@ -18,7 +18,9 @@ public:
 		id_ = pId;
 		rotationVector_ = pRVec;
 		translationVector_ = pTVec;
+	}
 
+	void Calculate(){
 		cv::Mat rotation, jacobian;
 		cv::Mat view = cv::Mat::zeros(4,4,CV_32F);
 		cv::Mat transform = cv::Mat::zeros(4,4,CV_32F);
@@ -42,13 +44,11 @@ public:
 		view = transform * view;
 		cv::transpose(view, view);
 		//PrintMat<float>(&view);
-		auto r = rotationVector_;
-		auto t = translationVector_;
 		//std::cout << "rVec " << r[0] << ", " << r[1] << ", " << r[2] << std::endl;
 		//std::cout << "tVec " << t[0] << ", " << t[1] << ", " << t[2] << std::endl;
 		glm::mat4 ret = glm::identity<glm::mat4>();
 		fromCV2GLM(view, &ret);
-		transform_= ret;
+		transform_= &ret;
 	}
 
 	std::vector<double> Rotation()
@@ -62,7 +62,9 @@ public:
 
 	glm::mat4 GLTransform(float pScale)
 	{
-		return transform_;
+		if(transform_ == nullptr)
+			Calculate();
+		return *transform_;
 	}
 
 	std::vector<cv::Point2f> Corner() { return corner_;  }
@@ -70,7 +72,7 @@ public:
 	cv::Vec3d Translation() { return translationVector_; }
 
 private:
-	glm::mat4 transform_;
+	glm::mat4* transform_ = nullptr;
 	std::vector<cv::Point2f> corner_;
 	cv::Vec3d rotationVector_, translationVector_;
 	int id_;

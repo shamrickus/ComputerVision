@@ -28,6 +28,24 @@ public:
 		Object::SetSize(pSize);
 	}
 
+	virtual void SetPosition(glm::vec3 pPos) override
+	{
+		Object::SetPosition(pPos);
+		dGeomSetPosition(geom_, pPos[0], pPos[1], pPos[2]);
+	}
+
+	void SetRotation(glm::vec3 pRot)
+	{
+		dMatrix3 r;
+		dRFromEulerAngles(r, pRot[0], pRot[1], pRot[2]);
+		dGeomSetRotation(geom_, r);
+	}
+
+	void SetRotation(dMatrix3 pRot)
+	{
+		dGeomSetRotation(geom_, pRot);
+	}
+
 protected:
 	glm::mat4 GetScreenTransform() override
 	{

@@ -18,7 +18,7 @@ public:
 		vbo_ = new DeviceBuffer();
 		Build();
 		vao_->Bind();
-		vbo_->BindData(PointCount() * 9 * sizeof(float), points_);
+		vbo_->BindData(PointCount() * 3 * sizeof(float), points_);
 
 
 		fillB_ = new DeviceBuffer();
@@ -49,6 +49,7 @@ public:
 
 		size_ = glm::vec3(100, 1, 100);
 		density_ = 1;
+		color_ = glm::vec3(1);
 		assert(vao_->Validate());
 		assert(fill_->Validate());
 	}
@@ -58,7 +59,7 @@ public:
 	void Build()
 	{
 		auto count = PointCount() * 3;
-		auto stride = count / (gridSize_ / step_ + 1);
+		auto stride = count / (gridSize_ / step_);
 		points_ = new float[count];
 		for(int i = 0; i < count; i+=stride)
 		{
@@ -93,12 +94,11 @@ public:
 		vao_->Bind();
 		shader_->Activate();
 		auto mvpHandle = shader_->GetHandle("MVP");
-		auto mvp = pMVP; //* GetScreenTransform();
-		auto color = glm::vec3(1);
+		auto mvp = pMVP* GetScreenTransform();
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
-		glUniform3fv(shader_->GetHandle("nColor"), 1, &color[0]);
+		glUniform3fv(shader_->GetHandle("nColor"), 1, &color_[0]);
 		vao_->BindAttrib(vbo_, 0, 3);
-		vao_->Draw(PointCount()*9);
+		vao_->Draw(PointCount()*3);
 
 		/*
 		fill_->Bind();
@@ -112,15 +112,27 @@ public:
 
 	}
 
+	 glm::mat4 GetScale() override
+	{
+		return glm::scale(glm::identity<glm::mat4>(), glm::vec3(0.2f));
+	}
+
+	void Draw(glm::mat4 pMVP, glm::vec3 pColor)
+	{
+		color_ = pColor;
+		Draw(pMVP);
+	}
+
 protected:
 	int PointCount()
 	{
-		return (gridSize_ / step_ + 1) * 2 * 2;
+		return (gridSize_ / step_) * 2 * 2;
 	}
 	float* points_;
 	Origin type_;
 	int gridSize_;
 	int step_;
+	glm::vec3 color_;
 	DeviceBuffer* vbo_;
 	VertexBuffer* vao_;
 	ShaderProgram* shader_;
